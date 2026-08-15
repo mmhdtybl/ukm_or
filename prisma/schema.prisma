@@ -1,0 +1,317 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // ganti ke "mysql" atau "postgresql" untuk production
+  url      = env("DATABASE_URL")
+}
+
+// Catatan: SQLite tidak mendukung tipe enum bawaan Prisma,
+// sehingga field bertipe "kategori tetap" di bawah ini memakai String dengan nilai konvensi berikut:
+//
+// User.role            : "ADMIN" | "PENGURUS" | "ANGGOTA"
+// Pengurus.kodeJabatan  : "DPO" | "KETUA_UMUM" | "WAKIL_KETUA" | "SEKRETARIS" | "BENDAHARA" |
+//                         "BIDANG_SDM" | "BIDANG_INVENTARIS" | "BIDANG_MEDIA" | "KADIV"
+// Pengurus.kelompok     : "DPO" | "Inti" | "Bidang" | "Kadiv"
+// Anggota.status        : "Aktif" | "Non-Aktif" | "Alumni"
+// Pendaftaran.status    : "PENDING" | "DITERIMA" | "DITOLAK"
+// Agenda.status         : "AKAN_DATANG" | "BERLANGSUNG" | "SELESAI" | "BATAL"
+// Keuangan.jenis        : "MASUK" | "KELUAR"
+// Keuangan.status       : "PENDING" | "DIVERIFIKASI" | "DITOLAK"
+// Barang.kondisi        : "Baik" | "Rusak"
+// KomentarBarang.jenis  : "REQUEST" | "LAPOR_RUSAK"
+// KomentarBarang.status : "BARU" | "DITINDAK"
+// Jika Anda migrasi ke MySQL/PostgreSQL, silakan ubah field ini menjadi enum asli bila diinginkan.
+
+// ================= AKUN & KEANGGOTAAN =================
+
+// Akun login. HANYA dibuatkan manual oleh Admin/Ketua/Wakil setelah anggota
+// dikonfirmasi bergabung di grup WhatsApp — pendaftaran publik TIDAK otomatis membuat akun login.
+model User {
+  id            String   @id @default(cuid())
+  name          String
+  nim           String   @unique // dipakai untuk login (NPM/NIM)
+  email         String   @unique // hanya dipakai untuk notifikasi, bukan untuk login
+  password      String
+  role          String   @default("ANGGOTA")
+  avatar        String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  anggota           Anggota?
+  pengurus          Pengurus?
+  beritaDibuat      Berita[]
+  agendaDibuat      Agenda[]
+  arsipDiunggah     Arsip[]
+  keuanganDicatat   Keuangan[]
+  presensiDiunggah  PresensiFoto[]
+  absensiKegiatan   AbsensiAnggota[] @relation("AbsensiUser")
+}
+
+// Anggota biasa (masa keanggotaan 1 periode). Hanya bisa melihat, presensi (dokumentasi),
+// membayar/lapor kas, dan berkomentar ke Bidang Inventaris.
+model Anggota {
+  id            String    @id @default(cuid())
+  userId        String?   @unique
+  user          User?     @relation(fields: [userId], references: [id])
+  nim           String    @unique
+  nama          String
+  prodi         String
+  angkatan      String
+  noHp          String?
+  foto          String?
+  divisi        String?   // Voli / Futsal / Bulutangkis / E-Sport / Taekwondo / Basket
+  status        String    @default("Aktif") // Aktif / Non-Aktif / Alumni
+  periode       String?   // periode keanggotaan (mis. "2025/2026") — anggota berlaku 1 periode
+  tanggalGabung DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  keuangan          Keuangan[]
+  komentarBarang    KomentarBarang[]
+}
+
+// Pengurus (masa jabatan 2-3 periode), memiliki kodeJabatan tetap yang menentukan hak akses.
+model Pengurus {
+  id           String   @id @default(cuid())
+  userId       String?  @unique
+  user         User?    @relation(fields: [userId], references: [id])
+  nama         String
+  jabatan      String   // Label tampilan bebas, mis. "Ketua Umum", "Kadiv Voli"
+  kodeJabatan  String   @default("KADIV") // kode tetap untuk logika hak akses (lihat catatan di atas)
+  kelompok     String   @default("Lainnya") // DPO / Inti / Bidang / Kadiv - untuk pengelompokan tampilan struktur
+  divisi       String?  // diisi jika kodeJabatan = KADIV, contoh: "Voli"
+  foto         String?
+  periodeMulai String   // contoh: "2024/2025"
+  periodeAkhir String?  // contoh: "2026/2027" (pengurus dapat menjabat 2-3 periode)
+  urutan       Int      @default(0) // untuk mengatur urutan tampil di struktur
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ================= KONTEN PUBLIK =================
+
+model KategoriBerita {
+  id      String   @id @default(cuid())
+  nama    String   @unique
+  slug    String   @unique
+  berita  Berita[]
+}
+
+model Berita {
+  id             String          @id @default(cuid())
+  judul          String
+  slug           String          @unique
+  ringkasan      String
+  konten         String
+  gambar         String?
+  kategoriId     String?
+  kategori       KategoriBerita? @relation(fields: [kategoriId], references: [id])
+  penulisId      String?
+  penulis        User?           @relation(fields: [penulisId], references: [id])
+  isPublished    Boolean         @default(false)
+  dilihat        Int             @default(0)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model Galeri {
+  id        String   @id @default(cuid())
+  judul     String
+  gambar    String
+  kategori  String?  // Kegiatan, Prestasi, dll
+  createdAt DateTime @default(now())
+}
+
+model Agenda {
+  id             String        @id @default(cuid())
+  judul          String
+  slug           String        @unique
+  deskripsi      String
+  lokasi         String
+  tanggalMulai   DateTime
+  tanggalSelesai DateTime
+  gambar         String?
+  status         String        @default("AKAN_DATANG")
+  kuota          Int?
+  penyelenggara  String?
+  dibuatOlehId   String?
+  dibuatOleh     User?         @relation(fields: [dibuatOlehId], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  presensiFoto   PresensiFoto[]
+  absensiAnggota AbsensiAnggota[]
+}
+
+// Absensi individual per anggota/pengurus untuk setiap kegiatan
+// Setiap user harus absen sendiri dan independen berdasarkan akun login mereka
+model AbsensiAnggota {
+  id           String   @id @default(cuid())
+  agendaId     String
+  agenda       Agenda   @relation(fields: [agendaId], references: [id], onDelete: Cascade)
+  userId       String   // User yang absen (diambil dari session, bukan role)
+  user         User     @relation("AbsensiUser", fields: [userId], references: [id], onDelete: Cascade)
+  fotoUrl      String?  // Foto absen (opsional)
+  status       String   @default("HADIR") // HADIR / IZIN / ALPHA
+  keterangan   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([agendaId, userId]) // Satu user hanya bisa absen sekali per kegiatan
+}
+
+// Presensi/dokumentasi kegiatan secara MANUAL: berupa foto kegiatan/event yang sedang
+// berlangsung (bukan absensi per-individu). Diunggah oleh pengurus yang berwenang
+// (Ketua, Wakil, Bidang SDM, Kadiv terkait, atau Admin).
+model PresensiFoto {
+  id               String   @id @default(cuid())
+  agendaId         String
+  agenda           Agenda   @relation(fields: [agendaId], references: [id], onDelete: Cascade)
+  fotoUrl          String
+  keterangan       String?
+  diunggahOlehId   String?
+  diunggahOleh     User?    @relation(fields: [diunggahOlehId], references: [id])
+  createdAt        DateTime @default(now())
+}
+
+model Prestasi {
+  id            String   @id @default(cuid())
+  judul         String
+  tingkat       String   // Kampus, Kota, Provinsi, Nasional, Internasional
+  peraih        String   // nama anggota/tim
+  penyelenggara String?
+  tahun         Int
+  gambar        String?
+  keterangan    String?
+  createdAt     DateTime @default(now())
+}
+
+// Pendaftaran anggota baru (form publik). TIDAK membuat akun login secara otomatis.
+// Jika status "DITERIMA", pendaftar dikirimi email berisi link grup WhatsApp untuk bergabung.
+// Akun login dibuatkan manual oleh Admin/Ketua/Wakil melalui menu Kelola Anggota.
+model Pendaftaran {
+  id            String   @id @default(cuid())
+  nama          String
+  nim           String
+  email         String
+  noHp          String
+  prodi         String
+  angkatan      String
+  motivasi      String
+  divisiPilihan String?
+  status        String   @default("PENDING")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Kontak {
+  id        String   @id @default(cuid())
+  nama      String
+  email     String
+  subjek    String
+  pesan     String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+// File unduhan publik: AD/ART, proposal, formulir, dll.
+model FileUnduhan {
+  id        String   @id @default(cuid())
+  judul     String
+  kategori  String?
+  fileUrl   String
+  createdAt DateTime @default(now())
+}
+
+model Banner {
+  id        String   @id @default(cuid())
+  judul     String
+  subjudul  String?
+  gambar    String
+  linkUrl   String?
+  urutan    Int      @default(0)
+  isActive  Boolean  @default(true)
+}
+
+// Profil UKM & ketentuan umum website - single row (singleton)
+model ProfilUKM {
+  id           String   @id @default(cuid())
+  namaUKM      String
+  logo         String?
+  deskripsi    String
+  visi         String
+  misi         String
+  sejarah      String?
+  alamat       String?
+  email        String?
+  telepon      String?
+  instagram    String?
+  facebook     String?
+  youtube      String?
+  tiktok       String?
+  waGroupLink  String?  // link grup WhatsApp resmi, dikirim ke pendaftar yang diterima
+  updatedAt    DateTime @updatedAt
+}
+
+// ================= MODUL KERJA PENGURUS =================
+
+// Arsip dokumen UKM — dikelola oleh Sekretaris (upload & hapus)
+model Arsip {
+  id             String   @id @default(cuid())
+  judul          String
+  kategori       String?  // Surat, Notulen, Proposal, LPJ, dll
+  fileUrl        String
+  diunggahOlehId String?
+  diunggahOleh   User?    @relation(fields: [diunggahOlehId], references: [id])
+  createdAt      DateTime @default(now())
+}
+
+// Catatan keuangan/kas — dikelola oleh Bendahara. Anggota/staff dapat mengajukan
+// laporan pembayaran kas (status PENDING) yang perlu diverifikasi Bendahara.
+model Keuangan {
+  id             String   @id @default(cuid())
+  jenis          String   // MASUK / KELUAR
+  kategori       String   // Kas Anggota, Sponsor, Perlengkapan, Konsumsi, dll
+  jumlah         Float
+  keterangan     String?
+  buktiUrl       String?
+  anggotaId      String?  // diisi jika ini laporan pembayaran kas dari anggota
+  anggota        Anggota? @relation(fields: [anggotaId], references: [id])
+  status         String   @default("DIVERIFIKASI") // PENDING (submit anggota) / DIVERIFIKASI / DITOLAK
+  dicatatOlehId  String?
+  dicatatOleh    User?    @relation(fields: [dicatatOlehId], references: [id])
+  tanggal        DateTime @default(now())
+  createdAt      DateTime @default(now())
+}
+
+// Inventaris barang UKM — dikelola oleh Bidang Inventaris
+model Barang {
+  id          String   @id @default(cuid())
+  nama        String
+  divisi      String?  // pemilik/pengguna barang, mis. "Voli", "Umum"
+  jumlah      Int      @default(1)
+  kondisi     String   @default("Baik") // Baik / Rusak
+  gambar      String?
+  keterangan  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  komentar    KomentarBarang[]
+}
+
+// Komentar dari staff/anggota ke Bidang Inventaris: permintaan barang baru atau lapor kerusakan
+model KomentarBarang {
+  id          String   @id @default(cuid())
+  barangId    String?
+  barang      Barang?  @relation(fields: [barangId], references: [id], onDelete: SetNull)
+  anggotaId   String
+  anggota     Anggota  @relation(fields: [anggotaId], references: [id], onDelete: Cascade)
+  jenis       String   // REQUEST / LAPOR_RUSAK
+  pesan       String
+  status      String   @default("BARU") // BARU / DITINDAK
+  createdAt   DateTime @default(now())
+}

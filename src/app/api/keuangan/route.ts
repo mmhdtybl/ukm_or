@@ -1,0 +1,77 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { getKapabilitas } from "@/lib/permissions";
+
+// GET: Bendahara/Ketua/Wakil/Admin melihat semua catatan keuangan.
+// Anggota biasa hanya melihat riwayat kas miliknya sendiri.
+export async function GET() {
+  const session = await auth();
+  const kap = await getKapabilitas();
+  if (!session || !kap) return NextResponse.json({ message: "Tidak diizinkan" }, { status: 403 });
+
+  if (kap.canManageKeuangan) {
+    const list = await prisma.keuangan.findMany({
+      include: { anggota: { select: { nama: true, nim: true } }, dicatatOleh: { select: { name: true } } },
+      orderBy: { tanggal: "desc" },
+    });
+    return NextResponse.json(list);
+  }
+
+  // Anggota: hanya riwayat kas milik sendiri
+  const anggota = await prisma.anggota.findUnique({ where: { userId: (session.user as any).id } });
+  if (!anggota) return NextResponse.json([], { status: 200 });
+
+  const list = await prisma.keuangan.findMany({
+    where: { anggotaId: anggota.id },
+    orderBy: { tanggal: "desc" },
+  });
+  return NextResponse.json(list);
+}
+
+// POST: Bendahara/Ketua/Wakil/Admin mencatat transaksi apa pun (langsung terverifikasi).
+// Anggota biasa mengajukan laporan pembayaran kas pribadi (berstatus PENDING, menunggu verifikasi Bendahara).
+export async function POST(req: NextRequest) {
+  const session = await auth();
+  const kap = await getKapabilitas();
+  if (!session || !kap) return NextResponse.json({ message: "Tidak diizinkan" }, { status: 403 });
+
+  const body = await req.json();
+
+  if (kap.canManageKeuangan) {
+    const item = await prisma.keuangan.create({
+      data: {
+        jenis: body.jenis,
+        kategori: body.kategori,
+        jumlah: Number(body.jumlah),
+        keterangan: body.keterangan || null,
+        buktiUrl: body.buktiUrl || null,
+        status: "DIVERIFIKASI",
+        dicatatOlehId: (session.user as any).id,
+        tanggal: body.tanggal ? new Date(body.tanggal) : new Date(),
+      },
+    });
+    return NextResponse.json(item, { status: 201 });
+  }
+
+  if (kap.canKelolaKas) {
+    const anggota = await prisma.anggota.findUnique({ where: { userId: (session.user as any).id } });
+    if (!anggota) return NextResponse.json({ message: "Akun ini bukan akun anggota" }, { status: 400 });
+
+    const item = await prisma.keuangan.create({
+      data: {
+        jenis: "MASUK",
+        kategori: body.kategori || "Kas Anggota",
+        jumlah: Number(body.jumlah),
+        keterangan: body.keterangan || null,
+        buktiUrl: body.buktiUrl || null,
+        status: "PENDING",
+        anggotaId: anggota.id,
+        tanggal: new Date(),
+      },
+    });
+    return NextResponse.json(item, { status: 201 });
+  }
+
+  return NextResponse.json({ message: "Tidak diizinkan" }, { status: 403 });
+}
