@@ -11,7 +11,8 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "email:test": "node --env-file=.env --import=tsx scripts/test-email.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.20.0",

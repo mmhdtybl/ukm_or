@@ -1,56 +1,312 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getKapabilitas } from "@/lib/permissions";
-import { sendMail, templatePendaftaranDitolak } from "@/lib/email";
+import {
+  sendMail,
+  templatePendaftaranLulus,
+  templatePendaftaranDitolak,
+} from "@/lib/email";
 
-// PATCH: setujui / tolak pendaftaran anggota baru.
-// Pendaftaran yang DITERIMA TIDAK otomatis membuat akun login — pendaftar akan dikirimi
-// link grup WhatsApp untuk bergabung terlebih dahulu. Akun login dibuatkan manual belakangan
-// oleh Admin/Ketua/Wakil/Bidang SDM (atau Kadiv untuk staff divisinya) melalui menu Kelola Anggota.
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const kap = await getKapabilitas();
-  if (!kap?.canManageAnggota) return NextResponse.json({ message: "Tidak diizinkan" }, { status: 403 });
+const TAHAP = {
+  PRADIKSAR_1: "PRADIKSAR_1",
+  PRADIKSAR_2: "PRADIKSAR_2",
+  DIKSAR: "DIKSAR",
+  SELESAI: "SELESAI",
+} as const;
 
-  const { status } = await req.json(); // "DITERIMA" | "DITOLAK"
+const STATUS = {
+  PENDING: "PENDING",
+  LULUS: "LULUS",
+  TIDAK_LULUS: "TIDAK_LULUS",
+} as const;
 
-  const pendaftaran = await prisma.pendaftaran.update({
-    where: { id: params.id },
-    data: { status },
-  });
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const kap = await getKapabilitas();
 
-  const profil = await prisma.profilUKM.findFirst();
-  const namaUKM = profil?.namaUKM || "UKM Olahraga Unimma";
+    if (!kap?.canManageAnggota) {
+      return NextResponse.json(
+        { message: "Tidak diizinkan" },
+        { status: 403 }
+      );
+    }
 
-  if (status === "DITERIMA") {
-    const waSection = profil?.waGroupLink
-      ? `<p>Silakan bergabung ke grup WhatsApp resmi kami melalui link berikut:</p>
-         <p><a href="${profil.waGroupLink}" style="color:#0F4C81;font-weight:bold">${profil.waGroupLink}</a></p>
-         <p>Setelah bergabung, panitia akan membuatkan akun login website untuk Anda.</p>`
-      : `<p>Panitia akan segera menghubungi Anda melalui WhatsApp/kontak yang Anda daftarkan untuk info bergabung lebih lanjut.</p>`;
+    const { status } = await req.json();
 
-    await sendMail(
-      pendaftaran.email,
-      `Pendaftaran Anggota ${namaUKM} Diterima`,
-      `<div style="font-family:sans-serif;max-width:520px;margin:auto">
-        <h2 style="color:#0F4C81">Selamat, ${pendaftaran.nama}!</h2>
-        <p>Pendaftaran Anda sebagai anggota <b>${namaUKM}</b> telah <b style="color:#16a34a">DITERIMA</b>.</p>
-        ${waSection}
-      </div>`
+    if (
+      status !== STATUS.LULUS &&
+      status !== STATUS.TIDAK_LULUS
+    ) {
+      return NextResponse.json(
+        {
+          message: "Status harus LULUS atau TIDAK_LULUS.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const pendaftaran = await prisma.pendaftaran.findUnique({
+      where: {
+        id: params.id,
+      },
+    });
+
+    if (!pendaftaran) {
+      return NextResponse.json(
+        {
+          message: "Data pendaftaran tidak ditemukan.",
+        },
+        { status: 404 }
+      );
+    }
+
+    if (pendaftaran.status !== STATUS.PENDING) {
+      return NextResponse.json(
+        {
+          message: "Pendaftaran ini sudah memiliki keputusan.",
+          data: pendaftaran,
+        },
+        { status: 400 }
+      );
+    }
+
+    const [profil, linksWhatsApp] = await Promise.all([
+      prisma.profilUKM.findFirst(),
+      prisma.linkWhatsApp.findMany(),
+    ]);
+
+    const linkTahap = new Map(
+      linksWhatsApp.map((item) => [item.tahap, item.link])
     );
-  } else if (status === "DITOLAK") {
-    await sendMail(
-      pendaftaran.email,
-      `Pendaftaran Anggota ${namaUKM}`,
-      templatePendaftaranDitolak(pendaftaran.nama, namaUKM)
+
+    const namaUKM =
+      profil?.namaUKM || "UKM Olahraga Unimma";
+
+    /*
+     * =====================================================
+     * TIDAK LULUS
+     * =====================================================
+     */
+
+    if (status === STATUS.TIDAK_LULUS) {
+      const tahapSekarang =
+        pendaftaran.tahap || TAHAP.PRADIKSAR_1;
+
+      const updated = await prisma.pendaftaran.update({
+        where: {
+          id: pendaftaran.id,
+        },
+        data: {
+          status: STATUS.TIDAK_LULUS,
+        },
+      });
+
+      const emailSent = await sendMail(
+        updated.email,
+        `Hasil Seleksi ${namaUKM}`,
+        templatePendaftaranDitolak(
+          updated.nama,
+          namaUKM,
+          tahapSekarang
+        )
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: emailSent
+          ? "Pendaftar dinyatakan tidak lulus dan email telah dikirim."
+          : "Pendaftar dinyatakan tidak lulus, tetapi email gagal dikirim.",
+        data: updated,
+        emailTerkirim: emailSent,
+        emailTujuan: updated.email,
+      });
+    }
+
+    /*
+     * =====================================================
+     * PRADIKSAR 1 → PRADIKSAR 2
+     * =====================================================
+     */
+
+    if (
+      pendaftaran.tahap === TAHAP.PRADIKSAR_1 ||
+      !pendaftaran.tahap
+    ) {
+      const updated = await prisma.pendaftaran.update({
+        where: {
+          id: pendaftaran.id,
+        },
+        data: {
+          tahap: TAHAP.PRADIKSAR_2,
+          status: STATUS.PENDING,
+          tanggalPradiksar1: new Date(),
+        },
+      });
+
+      const emailSent = await sendMail(
+        updated.email,
+        `Lulus Pradiksar 1 - ${namaUKM}`,
+        templatePendaftaranLulus(
+          updated.nama,
+          namaUKM,
+          TAHAP.PRADIKSAR_1,
+          TAHAP.PRADIKSAR_2,
+          linkTahap.get(TAHAP.PRADIKSAR_2)
+        )
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: emailSent
+          ? "Lulus Pradiksar 1. Email Pradiksar 2 berhasil dikirim."
+          : "Lulus Pradiksar 1, tetapi email gagal dikirim.",
+        data: updated,
+        emailTerkirim: emailSent,
+        emailTujuan: updated.email,
+      });
+    }
+
+    /*
+     * =====================================================
+     * PRADIKSAR 2 → DIKSAR
+     * =====================================================
+     */
+
+    if (pendaftaran.tahap === TAHAP.PRADIKSAR_2) {
+      const updated = await prisma.pendaftaran.update({
+        where: {
+          id: pendaftaran.id,
+        },
+        data: {
+          tahap: TAHAP.DIKSAR,
+          status: STATUS.PENDING,
+          tanggalPradiksar2: new Date(),
+        },
+      });
+
+      const emailSent = await sendMail(
+        updated.email,
+        `Lulus Pradiksar 2 - ${namaUKM}`,
+        templatePendaftaranLulus(
+          updated.nama,
+          namaUKM,
+          TAHAP.PRADIKSAR_2,
+          TAHAP.DIKSAR,
+          linkTahap.get(TAHAP.DIKSAR)
+        )
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: emailSent
+          ? "Lulus Pradiksar 2. Email Diksar berhasil dikirim."
+          : "Lulus Pradiksar 2, tetapi email gagal dikirim.",
+        data: updated,
+        emailTerkirim: emailSent,
+        emailTujuan: updated.email,
+      });
+    }
+
+    /*
+     * =====================================================
+     * DIKSAR → SELESAI / LULUS
+     * =====================================================
+     */
+
+    if (pendaftaran.tahap === TAHAP.DIKSAR) {
+      const waLink = profil?.waGroupLink || "";
+
+      const updated = await prisma.pendaftaran.update({
+        where: {
+          id: pendaftaran.id,
+        },
+        data: {
+          tahap: TAHAP.SELESAI,
+          status: STATUS.LULUS,
+          tanggalDiksar: new Date(),
+          tanggalLulus: new Date(),
+        },
+      });
+
+      const emailSent = await sendMail(
+        updated.email,
+        `🎉 Selamat! Anda Lulus Diksar - ${namaUKM}`,
+        templatePendaftaranLulus(
+          updated.nama,
+          namaUKM,
+          TAHAP.DIKSAR,
+          TAHAP.SELESAI,
+          waLink
+        )
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: emailSent
+          ? "Pendaftar lulus seluruh proses dan email berhasil dikirim."
+          : "Pendaftar lulus seluruh proses, tetapi email gagal dikirim.",
+        data: updated,
+        emailTerkirim: emailSent,
+        emailTujuan: updated.email,
+        whatsappLink: waLink || null,
+      });
+    }
+
+    return NextResponse.json(
+      {
+        message: `Tahap pendaftaran tidak dikenali: ${pendaftaran.tahap}`,
+      },
+      { status: 400 }
+    );
+  } catch (error) {
+    console.error("ERROR UPDATE PENDAFTARAN:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Terjadi kesalahan saat memproses pendaftaran.",
+      },
+      { status: 500 }
     );
   }
-
-  return NextResponse.json(pendaftaran);
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
-  const kap = await getKapabilitas();
-  if (!kap?.canManageAnggota) return NextResponse.json({ message: "Tidak diizinkan" }, { status: 403 });
-  await prisma.pendaftaran.delete({ where: { id: params.id } });
-  return NextResponse.json({ ok: true });
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const kap = await getKapabilitas();
+
+    if (!kap?.canManageAnggota) {
+      return NextResponse.json(
+        { message: "Tidak diizinkan" },
+        { status: 403 }
+      );
+    }
+
+    await prisma.pendaftaran.delete({
+      where: {
+        id: params.id,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "Pendaftaran berhasil dihapus.",
+    });
+  } catch (error) {
+    console.error("ERROR DELETE PENDAFTARAN:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Gagal menghapus pendaftaran.",
+      },
+      { status: 500 }
+    );
+  }
 }

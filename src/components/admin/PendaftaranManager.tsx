@@ -6,84 +6,534 @@ import { formatTanggalWaktu } from "@/lib/utils";
 
 const statusColor: Record<string, string> = {
   PENDING: "bg-orange-100 text-orange-600",
-  DITERIMA: "bg-green-100 text-green-700",
-  DITOLAK: "bg-red-100 text-red-600",
+  LULUS: "bg-green-100 text-green-700",
+  TIDAK_LULUS: "bg-red-100 text-red-600",
 };
 
-export default function PendaftaranManager({ initialData }: { initialData: any[] }) {
+const tahapLabel: Record<string, string> = {
+  PRADIKSAR_1: "Pradiksar 1",
+  PRADIKSAR_2: "Pradiksar 2",
+  DIKSAR: "Diksar",
+  SELESAI: "Selesai",
+};
+
+const tahapColor: Record<string, string> = {
+  PRADIKSAR_1: "bg-blue-100 text-blue-700",
+  PRADIKSAR_2: "bg-purple-100 text-purple-700",
+  DIKSAR: "bg-yellow-100 text-yellow-700",
+  SELESAI: "bg-green-100 text-green-700",
+};
+
+export default function PendaftaranManager({
+  initialData,
+  initialLinks,
+}: {
+  initialData: any[];
+  initialLinks: any[];
+}) {
   const router = useRouter();
+
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [filter, setFilter] = useState("PENDING");
   const [detail, setDetail] = useState<any>(null);
+  const [links, setLinks] = useState<Record<string, string>>(() =>
+    Object.fromEntries(initialLinks.map((item) => [item.tahap, item.link]))
+  );
+  const [savingLinks, setSavingLinks] = useState(false);
 
-  async function handleAction(id: string, status: "DITERIMA" | "DITOLAK") {
-    if (!confirm(`Yakin ingin ${status === "DITERIMA" ? "menerima" : "menolak"} pendaftaran ini? Email notifikasi akan otomatis dikirim (jika diterima, berisi link grup WhatsApp — bukan akun login).`)) return;
-    setLoadingId(id);
-    await fetch(`/api/pendaftaran/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
-    setLoadingId(null);
-    setDetail(null);
-    router.refresh();
+  async function saveLinks() {
+    setSavingLinks(true);
+    try {
+      const response = await fetch("/api/pendaftaran/whatsapp", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ links }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.message || "Gagal menyimpan link WhatsApp.");
+      }
+      router.refresh();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Gagal menyimpan link WhatsApp.");
+    } finally {
+      setSavingLinks(false);
+    }
   }
 
-  const filtered = filter === "SEMUA" ? initialData : initialData.filter((p) => p.status === filter);
+  async function handleAction(
+    id: string,
+    status: "LULUS" | "TIDAK_LULUS",
+    email: string,
+    nama: string,
+    tahap: string
+  ) {
+    const isLulus = status === "LULUS";
+
+    const tujuan = email;
+
+    const konfirmasi = window.confirm(
+      `${isLulus ? "LULUSKAN" : "TIDAK LULUSKAN"} pendaftar ini?\n\n` +
+        `Nama: ${nama}\n` +
+        `Email tujuan: ${tujuan}\n` +
+        `Tahap: ${tahapLabel[tahap] || tahap}\n\n` +
+        `${
+          isLulus
+            ? tahap === "PRADIKSAR_1"
+              ? "Pendaftar akan lanjut ke Pradiksar 2."
+              : tahap === "PRADIKSAR_2"
+              ? "Pendaftar akan lanjut ke Diksar."
+              : "Pendaftar akan dinyatakan lulus dan menerima link WhatsApp."
+            : "Email tidak lulus akan dikirim ke alamat tersebut."
+        }`
+    );
+
+    if (!konfirmasi) return;
+
+    try {
+      setLoadingId(id);
+
+      const res = await fetch(`/api/pendaftaran/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Gagal memproses pendaftaran.");
+        return;
+      }
+
+      alert(
+        data.emailTerkirim
+          ? `Berhasil diproses.\n\nEmail dikirim ke:\n${data.emailTujuan}`
+          : `Status berhasil diubah, tetapi email gagal dikirim ke:\n${data.emailTujuan}`
+      );
+
+      setDetail(null);
+      router.refresh();
+    } catch (error) {
+      console.error(error);
+      alert("Terjadi kesalahan jaringan.");
+    } finally {
+      setLoadingId(null);
+    }
+  }
+
+  const filtered =
+    filter === "SEMUA"
+      ? initialData
+      : filter === "PENDING"
+      ? initialData.filter((p) => p.status === "PENDING")
+      : filter === "LULUS"
+      ? initialData.filter(
+          (p) => p.status === "LULUS" || p.tahap === "SELESAI"
+        )
+      : filter === "TIDAK_LULUS"
+      ? initialData.filter((p) => p.status === "TIDAK_LULUS")
+      : initialData.filter((p) => p.tahap === filter);
+
+  const filters = [
+    { value: "PENDING", label: "Menunggu" },
+    { value: "PRADIKSAR_1", label: "Pradiksar 1" },
+    { value: "PRADIKSAR_2", label: "Pradiksar 2" },
+    { value: "DIKSAR", label: "Diksar" },
+    { value: "LULUS", label: "Lulus" },
+    { value: "TIDAK_LULUS", label: "Tidak Lulus" },
+    { value: "SEMUA", label: "Semua" },
+  ];
 
   return (
     <div>
-      <div className="flex gap-2 mb-4">
-        {["PENDING", "DITERIMA", "DITOLAK", "SEMUA"].map((f) => (
-          <button key={f} onClick={() => setFilter(f)} className={`badge ${filter === f ? "bg-primary text-white" : "bg-surface-light dark:bg-white/10"}`}>
-            {f === "PENDING" ? "Menunggu" : f === "SEMUA" ? "Semua" : f.charAt(0) + f.slice(1).toLowerCase()}
+      <div className="card mb-6 space-y-4">
+        <div>
+          <h2 className="font-semibold">Link Grup WhatsApp per Tahap</h2>
+          <p className="text-sm text-slate-500 mt-1">Link dikirim melalui email saat pendaftar memasuki tahap terkait.</p>
+        </div>
+        {(["PRADIKSAR_1", "PRADIKSAR_2", "DIKSAR"] as const).map((tahap) => (
+          <div key={tahap}>
+            <label className="label">Link WhatsApp {tahapLabel[tahap]}</label>
+            <input
+              type="url"
+              className="input"
+              value={links[tahap] || ""}
+              onChange={(event) => setLinks({ ...links, [tahap]: event.target.value })}
+              placeholder="https://chat.whatsapp.com/..."
+            />
+          </div>
+        ))}
+        <button type="button" className="btn-primary" disabled={savingLinks} onClick={saveLinks}>
+          {savingLinks ? "Menyimpan..." : "Simpan Link WhatsApp"}
+        </button>
+      </div>
+      {/* FILTER */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        {filters.map((f) => (
+          <button
+            key={f.value}
+            onClick={() => setFilter(f.value)}
+            className={`badge transition ${
+              filter === f.value
+                ? "bg-primary text-white"
+                : "bg-surface-light dark:bg-white/10"
+            }`}
+          >
+            {f.label}
           </button>
         ))}
       </div>
 
+      {/* TABLE */}
       <div className="card overflow-x-auto">
         <table className="table-admin">
-          <thead><tr><th>Nama</th><th>NIM</th><th>Prodi</th><th>Tanggal</th><th>Status</th><th>Aksi</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Nama</th>
+              <th>NIM</th>
+              <th>Email</th>
+              <th>Tahap</th>
+              <th>Status</th>
+              <th>Tanggal</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+
           <tbody>
-            {filtered.map((p) => (
-              <tr key={p.id}>
-                <td className="font-medium">
-                  <button onClick={() => setDetail(p)} className="hover:text-primary dark:hover:text-accent underline decoration-dotted">{p.nama}</button>
-                </td>
-                <td>{p.nim}</td>
-                <td>{p.prodi}</td>
-                <td>{formatTanggalWaktu(p.createdAt)}</td>
-                <td><span className={`badge ${statusColor[p.status]}`}>{p.status}</span></td>
-                <td>
-                  {p.status === "PENDING" && (
-                    <div className="flex gap-2">
-                      <button disabled={loadingId === p.id} onClick={() => handleAction(p.id, "DITERIMA")} className="text-xs font-semibold text-green-600">Terima</button>
-                      <button disabled={loadingId === p.id} onClick={() => handleAction(p.id, "DITOLAK")} className="text-xs font-semibold text-red-500">Tolak</button>
+            {filtered.map((p) => {
+              const tahap = p.tahap || "PRADIKSAR_1";
+              const isLoading = loadingId === p.id;
+
+              return (
+                <tr key={p.id}>
+                  {/* NAMA */}
+                  <td className="font-medium">
+                    <button
+                      onClick={() => setDetail(p)}
+                      className="hover:text-primary dark:hover:text-accent underline decoration-dotted"
+                    >
+                      {p.nama}
+                    </button>
+                  </td>
+
+                  {/* NIM */}
+                  <td>{p.nim}</td>
+
+                  {/* EMAIL */}
+                  <td>
+                    <div className="text-sm">
+                      <div>{p.email}</div>
+
+                      <button
+                        onClick={() => {
+                          setDetail(p);
+                        }}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Lihat rincian
+                      </button>
                     </div>
-                  )}
+                  </td>
+
+                  {/* TAHAP */}
+                  <td>
+                    <span
+                      className={`badge ${
+                        tahapColor[tahap] ||
+                        "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      {tahapLabel[tahap] || tahap}
+                    </span>
+                  </td>
+
+                  {/* STATUS */}
+                  <td>
+                    <span
+                      className={`badge ${
+                        statusColor[p.status] ||
+                        "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      {p.status}
+                    </span>
+                  </td>
+
+                  {/* TANGGAL */}
+                  <td>{formatTanggalWaktu(p.createdAt)}</td>
+
+                  {/* AKSI */}
+                  <td>
+                    {p.status === "PENDING" ? (
+                      <div className="flex flex-col gap-2 min-w-[150px]">
+                        <button
+                          disabled={isLoading}
+                          onClick={() =>
+                            handleAction(
+                              p.id,
+                              "LULUS",
+                              p.email,
+                              p.nama,
+                              tahap
+                            )
+                          }
+                          className="text-xs font-semibold text-green-600 hover:text-green-700 disabled:opacity-50"
+                        >
+                          {isLoading ? "Memproses..." : "✓ Lulus"}
+                        </button>
+
+                        <button
+                          disabled={isLoading}
+                          onClick={() =>
+                            handleAction(
+                              p.id,
+                              "TIDAK_LULUS",
+                              p.email,
+                              p.nama,
+                              tahap
+                            )
+                          }
+                          className="text-xs font-semibold text-red-500 hover:text-red-600 disabled:opacity-50"
+                        >
+                          {isLoading ? "Memproses..." : "✕ Tidak Lulus"}
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setDetail(p)}
+                        className="text-xs font-semibold text-primary hover:underline"
+                      >
+                        Detail
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+
+            {filtered.length === 0 && (
+              <tr>
+                <td
+                  colSpan={7}
+                  className="text-center text-slate-400 py-6"
+                >
+                  Tidak ada data pendaftaran.
                 </td>
               </tr>
-            ))}
-            {filtered.length === 0 && <tr><td colSpan={6} className="text-center text-slate-400 py-6">Tidak ada data.</td></tr>}
+            )}
           </tbody>
         </table>
       </div>
 
+      {/* DETAIL MODAL */}
       {detail && (
-        <div className="fixed inset-0 bg-black/50 z-50 grid place-items-center p-4" onClick={() => setDetail(null)}>
-          <div className="card max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-semibold text-lg mb-4">Detail Pendaftaran</h3>
-            <ul className="text-sm space-y-1.5">
-              <li><b>Nama:</b> {detail.nama}</li>
-              <li><b>NIM:</b> {detail.nim}</li>
-              <li><b>Email:</b> {detail.email}</li>
-              <li><b>No. HP:</b> {detail.noHp}</li>
-              <li><b>Prodi:</b> {detail.prodi}</li>
-              <li><b>Angkatan:</b> {detail.angkatan}</li>
-              <li><b>Divisi Pilihan:</b> {detail.divisiPilihan || "-"}</li>
-              <li><b>Motivasi:</b> {detail.motivasi}</li>
-            </ul>
-            <button onClick={() => setDetail(null)} className="btn-outline w-full mt-4">Tutup</button>
+        <div
+          className="fixed inset-0 bg-black/50 z-50 grid place-items-center p-4"
+          onClick={() => setDetail(null)}
+        >
+          <div
+            className="card max-w-lg w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-semibold text-lg">
+                Detail Pendaftaran
+              </h3>
+
+              <button
+                onClick={() => setDetail(null)}
+                className="text-slate-400 hover:text-red-500 text-xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* STATUS */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-xs text-slate-500 mb-1">
+                    Tahap Seleksi
+                  </p>
+
+                  <span
+                    className={`badge ${
+                      tahapColor[detail.tahap] ||
+                      "bg-slate-100 text-slate-600"
+                    }`}
+                  >
+                    {tahapLabel[detail.tahap] ||
+                      detail.tahap ||
+                      "Pradiksar 1"}
+                  </span>
+                </div>
+
+                <div>
+                  <p className="text-xs text-slate-500 mb-1">
+                    Status
+                  </p>
+
+                  <span
+                    className={`badge ${
+                      statusColor[detail.status] ||
+                      "bg-slate-100 text-slate-600"
+                    }`}
+                  >
+                    {detail.status}
+                  </span>
+                </div>
+              </div>
+
+              {/* DATA PENDAFTAR */}
+              <div className="border-t pt-4 space-y-2 text-sm">
+                <div className="flex justify-between gap-4">
+                  <b>Nama</b>
+                  <span>{detail.nama}</span>
+                </div>
+
+                <div className="flex justify-between gap-4">
+                  <b>NIM</b>
+                  <span>{detail.nim}</span>
+                </div>
+
+                <div className="flex justify-between gap-4">
+                  <b>Email Tujuan</b>
+                  <span className="text-right break-all">
+                    {detail.email}
+                  </span>
+                </div>
+
+                <div className="flex justify-between gap-4">
+                  <b>No. HP / WhatsApp</b>
+                  <span>{detail.noHp}</span>
+                </div>
+
+                <div className="flex justify-between gap-4">
+                  <b>Program Studi</b>
+                  <span>{detail.prodi}</span>
+                </div>
+
+                <div className="flex justify-between gap-4">
+                  <b>Angkatan</b>
+                  <span>{detail.angkatan}</span>
+                </div>
+
+                <div className="flex justify-between gap-4">
+                  <b>Cabang / Divisi</b>
+                  <span>{detail.divisiPilihan || "-"}</span>
+                </div>
+              </div>
+
+              {/* MOTIVASI */}
+              <div className="border-t pt-4">
+                <p className="font-semibold text-sm mb-2">
+                  Motivasi
+                </p>
+
+                <div className="bg-slate-50 dark:bg-white/5 rounded-lg p-3 text-sm whitespace-pre-wrap">
+                  {detail.motivasi || "-"}
+                </div>
+              </div>
+
+              {/* TANGGAL */}
+              <div className="border-t pt-4 space-y-2 text-sm">
+                <p>
+                  <b>Pendaftaran:</b>{" "}
+                  {formatTanggalWaktu(detail.createdAt)}
+                </p>
+
+                {detail.tanggalPradiksar1 && (
+                  <p>
+                    <b>Lulus Pradiksar 1:</b>{" "}
+                    {formatTanggalWaktu(detail.tanggalPradiksar1)}
+                  </p>
+                )}
+
+                {detail.tanggalPradiksar2 && (
+                  <p>
+                    <b>Lulus Pradiksar 2:</b>{" "}
+                    {formatTanggalWaktu(detail.tanggalPradiksar2)}
+                  </p>
+                )}
+
+                {detail.tanggalDiksar && (
+                  <p>
+                    <b>Lulus Diksar:</b>{" "}
+                    {formatTanggalWaktu(detail.tanggalDiksar)}
+                  </p>
+                )}
+
+                {detail.tanggalLulus && (
+                  <p>
+                    <b>Tanggal Lulus:</b>{" "}
+                    {formatTanggalWaktu(detail.tanggalLulus)}
+                  </p>
+                )}
+              </div>
+
+              {/* AKSI DI DETAIL */}
+              {detail.status === "PENDING" && (
+                <div className="border-t pt-4">
+                  <p className="text-xs text-slate-500 mb-3">
+                    Email akan dikirim ke:
+                  </p>
+
+                  <div className="bg-slate-100 dark:bg-white/10 rounded-lg p-3 text-sm mb-3 break-all">
+                    {detail.email}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      disabled={loadingId === detail.id}
+                      onClick={() =>
+                        handleAction(
+                          detail.id,
+                          "LULUS",
+                          detail.email,
+                          detail.nama,
+                          detail.tahap || "PRADIKSAR_1"
+                        )
+                      }
+                      className="btn-primary"
+                    >
+                      {loadingId === detail.id
+                        ? "Mengirim..."
+                        : "✓ Lulus & Kirim Email"}
+                    </button>
+
+                    <button
+                      disabled={loadingId === detail.id}
+                      onClick={() =>
+                        handleAction(
+                          detail.id,
+                          "TIDAK_LULUS",
+                          detail.email,
+                          detail.nama,
+                          detail.tahap || "PRADIKSAR_1"
+                        )
+                      }
+                      className="btn-outline text-red-500"
+                    >
+                      {loadingId === detail.id
+                        ? "Mengirim..."
+                        : "✕ Tidak Lulus"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={() => setDetail(null)}
+                className="btn-outline w-full"
+              >
+                Tutup
+              </button>
+            </div>
           </div>
         </div>
       )}

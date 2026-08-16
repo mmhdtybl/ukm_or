@@ -3,5 +3,13 @@ node_modules/
 dev.db
 dev.db-journal
 .env
+
 public/uploads/*
 !public/uploads/.gitkeep
+
+*.tsbuildinfo
+build.log
+test-conn.js
+scripts/test-email.ts
+.agents/
+skills-lock.json
