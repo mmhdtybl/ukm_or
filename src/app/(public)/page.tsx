@@ -5,6 +5,7 @@ import { formatTanggal } from "@/lib/utils";
 import { FiArrowRight, FiCalendar, FiMapPin, FiAward, FiUsers, FiChevronRight } from "react-icons/fi";
 import HomeBannerCarousel from "@/components/HomeBannerCarousel";
 
+export const dynamic = "force-dynamic";
 export default async function HomePage() {
   const [profil, banners, berita, agenda, prestasi, jumlahAnggota] = await Promise.all([
     prisma.profilUKM.findFirst(),
