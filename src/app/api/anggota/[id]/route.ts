@@ -19,17 +19,23 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   if (!cek.ok) return NextResponse.json({ message: "Tidak diizinkan" }, { status: 403 });
 
   const body = await req.json();
-  const item = await prisma.anggota.update({
-    where: { id: params.id },
-    data: {
-      nama: body.nama,
-      prodi: body.prodi,
-      angkatan: body.angkatan,
-      noHp: body.noHp,
-      divisi: body.divisi,
-      status: body.status,
-      periode: body.periode,
-    },
+  const existing = await prisma.anggota.findUnique({ where: { id: params.id } });
+  if (!existing) return NextResponse.json({ message: "Data anggota tidak ditemukan." }, { status: 404 });
+  const nim = String(body.nim || "").trim();
+  if (!nim) return NextResponse.json({ message: "NIM wajib diisi." }, { status: 400 });
+  if (nim !== existing.nim) {
+    const [anggotaDuplikat, akunDuplikat] = await Promise.all([
+      prisma.anggota.findFirst({ where: { nim, NOT: { id: params.id } } }),
+      prisma.user.findFirst({ where: { nim, NOT: { id: existing.userId || "" } } }),
+    ]);
+    if (anggotaDuplikat || akunDuplikat) return NextResponse.json({ message: "NIM sudah digunakan anggota atau akun lain." }, { status: 400 });
+  }
+  const item = await prisma.$transaction(async (tx) => {
+    if (existing.userId && nim !== existing.nim) await tx.user.update({ where: { id: existing.userId }, data: { nim } });
+    return tx.anggota.update({
+      where: { id: params.id },
+      data: { nama: body.nama, nim, prodi: body.prodi, angkatan: body.angkatan, noHp: body.noHp, divisi: body.divisi, status: body.status, periode: body.periode },
+    });
   });
   return NextResponse.json(item);
 }

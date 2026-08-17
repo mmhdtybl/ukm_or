@@ -5,9 +5,9 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useState } from "react";
 import {
-  FiGrid, FiFileText, FiCalendar, FiImage, FiUsers, FiUserCheck,
+  FiGrid, FiFileText, FiCalendar, FiImage,
   FiAward, FiLayout, FiSettings, FiMail, FiUserPlus, FiMenu, FiX, FiLogOut,
-  FiCamera, FiArchive, FiDollarSign, FiBox, FiEye, FiMessageSquare, FiUser, FiKey,
+  FiCamera, FiArchive, FiDollarSign, FiBox, FiEye, FiMessageSquare, FiUser, FiKey, FiHome,
 } from "react-icons/fi";
 import DarkModeToggle from "./DarkModeToggle";
 import type { Kapabilitas } from "@/lib/permissions";
@@ -25,9 +25,7 @@ export default function DashboardShell({ kap, name, avatar, children }: { kap: K
     { href: "/dashboard/agenda", label: "Kelola Agenda", icon: FiCalendar, show: kap.canManageEvent },
     { href: "/dashboard/presensi", label: "Presensi Kegiatan", icon: FiCamera, show: kap.canUploadPresensi && kap.role === "PENGURUS" },
     { href: "/dashboard/galeri", label: "Kelola Galeri", icon: FiImage, show: kap.canManageGaleriStruktur },
-    { href: "/dashboard/pengurus", label: "Kelola Pengurus", icon: FiUserCheck, show: kap.canManagePengurus },
     { href: "/dashboard/akun", label: "Kelola Akun & Password", icon: FiKey, show: kap.isAdmin },
-    { href: "/dashboard/anggota", label: kap.kodeJabatan === "KADIV" ? "Staff Divisi Saya" : "Kelola Anggota", icon: FiUsers, show: kap.canManageAnggota || kap.canManageDivisiStaff },
     { href: "/dashboard/pendaftaran", label: "Pendaftaran Masuk", icon: FiUserPlus, show: kap.canManageAnggota },
     { href: "/dashboard/prestasi", label: "Kelola Prestasi", icon: FiAward, show: kap.canManageGaleriStruktur || kap.isKetuaOrWakil || kap.isAdmin },
     { href: "/dashboard/arsip", label: "Kelola Arsip", icon: FiArchive, show: kap.canManageArsip },
@@ -98,6 +96,10 @@ export default function DashboardShell({ kap, name, avatar, children }: { kap: K
             <FiLogOut size={16} />
             Keluar
           </button>
+          <Link href="/" className="mt-3 flex items-center gap-2 text-sm font-medium text-primary hover:text-primary-light transition-colors">
+            <FiHome size={16} />
+            Kembali ke Website
+          </Link>
         </div>
       </aside>
 
@@ -164,6 +166,10 @@ export default function DashboardShell({ kap, name, avatar, children }: { kap: K
             </nav>
 
             <div className="p-4 border-t border-slate-200 dark:border-slate-700">
+              <Link href="/" onClick={() => setOpen(false)} className="mb-3 flex items-center gap-2 text-sm font-medium text-primary hover:text-primary-light">
+                <FiHome size={16} />
+                Kembali ke Website
+              </Link>
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
                 className="flex items-center gap-2 text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 w-full"

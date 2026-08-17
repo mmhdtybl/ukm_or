@@ -131,7 +131,7 @@ export default function AnggotaManager({
         <form onSubmit={handleSubmit} className="card grid sm:grid-cols-2 gap-4 mb-6">
           <h2 className="sm:col-span-2 font-semibold">{editing ? "Edit Anggota" : "Tambah Anggota"}</h2>
           <div><label className="label">Nama</label><input required className="input" value={form.nama} onChange={(e) => setForm({ ...form, nama: e.target.value })} /></div>
-          <div><label className="label">NIM</label><input required disabled={editing} className="input disabled:bg-slate-100 dark:disabled:bg-white/5" value={form.nim} onChange={(e) => setForm({ ...form, nim: e.target.value })} /></div>
+          <div><label className="label">NIM</label><input required className="input" value={form.nim} onChange={(e) => setForm({ ...form, nim: e.target.value })} />{editing && <p className="mt-1 text-xs text-slate-400">NIM akun login akan ikut diperbarui.</p>}</div>
           {!editing && <div><label className="label">Email untuk akun login <span className="text-slate-400 font-normal">(opsional)</span></label><input type="email" className="input" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="nama@email.com" /><p className="mt-1 text-xs text-slate-400">Isi email untuk langsung membuat akun anggota.</p></div>}
           <div><label className="label">Prodi</label><input required className="input" value={form.prodi} onChange={(e) => setForm({ ...form, prodi: e.target.value })} /></div>
           <div><label className="label">Angkatan</label><input required className="input" value={form.angkatan} onChange={(e) => setForm({ ...form, angkatan: e.target.value })} /></div>
