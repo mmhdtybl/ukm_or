@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { FiEdit2, FiKey, FiPlus, FiTrash2 } from "react-icons/fi";
 import AnggotaManager from "./AnggotaManager";
 import PengurusManager from "./PengurusManager";
+import PasswordInput from "@/components/PasswordInput";
 
 type Target = { id: string; nama: string; nim?: string; jabatan?: string; userId?: string | null; user?: { id: string; email: string } | null };
 
@@ -74,13 +75,13 @@ export default function AkunManager({ anggota, pengurus }: { anggota: Target[]; 
         <div><label className="label">Anggota / Pengurus</label><select required className="input" value={targetKey} onChange={(e) => { setTargetKey(e.target.value); setNim(""); }}><option value="">Pilih orang tanpa akun</option>{targets.map((x: any) => <option key={`${x.tipe}:${x.id}`} value={`${x.tipe}:${x.id}`}>{x.nama} — {x.tipe === "ANGGOTA" ? `NIM ${x.nim}` : x.jabatan}</option>)}</select></div>
         {selected?.tipe === "PENGURUS" && <div><label className="label">NIM Pengurus</label><input required className="input" value={nim} onChange={(e) => setNim(e.target.value)} /></div>}
         <div><label className="label">Email</label><input required type="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
-        <div><label className="label">Password awal</label><input required minLength={6} type="password" className="input" value={password} onChange={(e) => setPassword(e.target.value)} /><p className="text-xs text-slate-400 mt-1">Minimal 6 karakter.</p></div>
+        <div><label className="label">Password awal</label><PasswordInput required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} /><p className="text-xs text-slate-400 mt-1">Minimal 6 karakter.</p></div>
         <button disabled={loading} className="btn-primary">{loading ? "Menyimpan..." : "Buat Akun"}</button>
       </form>
       {editing && <form onSubmit={saveAccount} className="card space-y-4"><h2 className="font-semibold flex items-center gap-2"><FiKey /> Ubah Kredensial: {editing.nama}</h2>
         <div><label className="label">NIM</label><input required className="input" value={nim} onChange={(e) => setNim(e.target.value)} /></div>
         <div><label className="label">Email</label><input required type="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
-        <div><label className="label">Password baru</label><input minLength={6} type="password" className="input" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Kosongkan jika tidak diubah" /></div>
+        <div><label className="label">Password baru</label><PasswordInput minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Kosongkan jika tidak diubah" /></div>
         <div className="flex gap-2"><button disabled={loading} className="btn-primary">Simpan Kredensial</button><button type="button" onClick={() => { setEditing(null); setEmail(""); setPassword(""); setNim(""); }} className="btn-outline">Batal</button></div>
       </form>}
     </div>

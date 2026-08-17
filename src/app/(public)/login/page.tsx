@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -50,7 +51,7 @@ export default function LoginPage() {
           </div>
           <div>
             <label className="label">Kata Sandi</label>
-            <input name="password" type="password" required className="input" placeholder="••••••••" />
+            <PasswordInput name="password" required placeholder="••••••••" />
           </div>
           <button disabled={loading} className="btn-primary w-full">
             {loading ? "Memproses..." : "Masuk"}
