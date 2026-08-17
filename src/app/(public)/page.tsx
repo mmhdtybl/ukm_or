@@ -3,6 +3,7 @@ import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { formatTanggal } from "@/lib/utils";
 import { FiArrowRight, FiCalendar, FiMapPin, FiAward, FiUsers, FiChevronRight } from "react-icons/fi";
+import HomeBannerCarousel from "@/components/HomeBannerCarousel";
 
 export default async function HomePage() {
   const [profil, banners, berita, agenda, prestasi, jumlahAnggota] = await Promise.all([
@@ -180,19 +181,7 @@ export default async function HomePage() {
             {/* Hero Image */}
             <div className="relative h-64 md:h-96 rounded-2xl overflow-hidden bg-slate-100 dark:bg-surface-darkCard shadow-lg animate-slide-in-right banner-glow">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 pointer-events-none z-10" />
-              {hero?.gambar ? (
-                <Image 
-                  src={hero.gambar} 
-                  alt={hero.judul || "Hero Image"} 
-                  fill 
-                  className="object-cover"
-                  priority
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-slate-400 dark:text-slate-600">
-                  <span className="text-sm">Banner UKM</span>
-                </div>
-              )}
+              <HomeBannerCarousel banners={banners} />
             </div>
           </div>
         </div>
