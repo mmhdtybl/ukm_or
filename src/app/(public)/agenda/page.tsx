@@ -26,7 +26,7 @@ export default async function AgendaPage() {
   return (
     <div className="container-page py-16">
       <span className="section-eyebrow">Kalender Kegiatan</span>
-      <h1 className="section-title mb-10">Agenda Kegiatan UKM</h1>
+      <h1 className="section-title mb-10">Event UKM Olahraga</h1>
 
       <h2 className="font-semibold text-xl mb-4 text-primary dark:text-accent">Akan Berlangsung</h2>
       {mendatang.length === 0 ? (

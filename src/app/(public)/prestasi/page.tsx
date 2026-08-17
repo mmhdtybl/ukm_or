@@ -10,7 +10,7 @@ export default async function PrestasiPage() {
   return (
     <div className="container-page py-16">
       <span className="section-eyebrow">Kebanggaan Kami</span>
-      <h1 className="section-title mb-10">Prestasi UKM</h1>
+      <h1 className="section-title mb-10">Prestasi UKM Olahraga</h1>
 
       {prestasi.length === 0 ? (
         <p className="text-slate-500">Belum ada data prestasi.</p>

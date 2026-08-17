@@ -45,3 +45,40 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   return NextResponse.json({ ok: true, nim: anggota.nim, password: randomPassword });
 }
+
+// Admin dapat memperbarui email maupun mereset password akun anggota.
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+  const kap = await getKapabilitas();
+  if (!kap?.isAdmin) return NextResponse.json({ message: "Hanya admin yang dapat mengubah kredensial akun." }, { status: 403 });
+
+  const anggota = await prisma.anggota.findUnique({ where: { id: params.id }, include: { user: true } });
+  if (!anggota?.user) return NextResponse.json({ message: "Akun anggota belum tersedia." }, { status: 404 });
+
+  const { email, password } = await req.json();
+  if (!email) return NextResponse.json({ message: "Email wajib diisi." }, { status: 400 });
+  if (password && password.length < 6) return NextResponse.json({ message: "Password minimal 6 karakter." }, { status: 400 });
+
+  const duplicate = await prisma.user.findFirst({ where: { email, NOT: { id: anggota.user.id } } });
+  if (duplicate) return NextResponse.json({ message: "Email ini sudah dipakai akun lain." }, { status: 400 });
+
+  await prisma.user.update({
+    where: { id: anggota.user.id },
+    data: { email, ...(password ? { password: await bcrypt.hash(password, 10) } : {}) },
+  });
+  return NextResponse.json({ ok: true });
+}
+
+// Menghapus kredensial tanpa menghapus data keanggotaan.
+export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+  const kap = await getKapabilitas();
+  if (!kap?.isAdmin) return NextResponse.json({ message: "Hanya admin yang dapat menghapus akun." }, { status: 403 });
+
+  const anggota = await prisma.anggota.findUnique({ where: { id: params.id } });
+  if (!anggota?.userId) return NextResponse.json({ message: "Akun anggota belum tersedia." }, { status: 404 });
+
+  await prisma.$transaction([
+    prisma.anggota.update({ where: { id: anggota.id }, data: { userId: null } }),
+    prisma.user.delete({ where: { id: anggota.userId } }),
+  ]);
+  return NextResponse.json({ ok: true });
+}

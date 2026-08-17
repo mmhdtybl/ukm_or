@@ -13,10 +13,12 @@ export default function AnggotaManager({
   initialData,
   divisiLock,
   readOnly,
+  isAdmin,
 }: {
   initialData: any[];
   divisiLock: string | null;
   readOnly: boolean;
+  isAdmin: boolean;
 }) {
   const router = useRouter();
   const [q, setQ] = useState("");
@@ -90,6 +92,28 @@ export default function AnggotaManager({
     router.refresh();
   }
 
+  async function kelolaAkun(id: string, aksi: "ubah" | "hapus", akun?: any) {
+    if (aksi === "hapus") {
+      if (!confirm("Hapus akun login anggota ini? Data anggota tetap tersimpan.")) return;
+      const res = await fetch(`/api/anggota/${id}/akun`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) return alert(data.message || "Gagal menghapus akun.");
+      router.refresh();
+      return;
+    }
+    const email = prompt("Email akun", akun?.email || "");
+    if (!email) return;
+    const password = prompt("Password baru (kosongkan untuk tidak mengubah password)", "");
+    if (password === null) return;
+    const res = await fetch(`/api/anggota/${id}/akun`, {
+      method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return alert(data.message || "Gagal memperbarui akun.");
+    alert("Kredensial akun berhasil diperbarui.");
+    router.refresh();
+  }
+
   const filtered = initialData.filter((a) => a.nama.toLowerCase().includes(q.toLowerCase()) || a.nim.includes(q));
 
   return (
@@ -156,7 +180,7 @@ export default function AnggotaManager({
                 </td>
                 <td>
                   {a.userId ? (
-                    <span className="badge bg-green-100 text-green-700">Ada</span>
+                    <div className="flex items-center gap-2"><span className="badge bg-green-100 text-green-700">Ada</span>{isAdmin && <><button onClick={() => kelolaAkun(a.id, "ubah", a.user)} className="text-xs font-semibold text-blue-600">Kredensial</button><button onClick={() => kelolaAkun(a.id, "hapus")} className="text-xs font-semibold text-red-600">Hapus</button></>}</div>
                   ) : readOnly ? (
                     <span className="badge bg-orange-100 text-orange-600">Belum</span>
                   ) : (

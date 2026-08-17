@@ -26,6 +26,7 @@ export default async function KelolaAnggotaPage() {
         initialData={JSON.parse(JSON.stringify(anggota))}
         divisiLock={kap.divisiScope && !kap.canManageAnggota ? kap.divisiScope : null}
         readOnly={kap.viewOnly}
+        isAdmin={kap.isAdmin}
       />
     </div>
   );

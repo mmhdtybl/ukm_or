@@ -14,6 +14,9 @@ export async function POST(req: NextRequest) {
   if (!kap?.canManagePengurus) return NextResponse.json({ message: "Tidak diizinkan" }, { status: 403 });
 
   const body = await req.json();
+  if ((body.kodeJabatan === "KADIV" || body.kodeJabatan === "STAFF_DIVISI") && !body.divisi) {
+    return NextResponse.json({ message: "Cabang olahraga wajib dipilih untuk Kadiv atau Staff Divisi." }, { status: 400 });
+  }
   if (body.email && !body.nim) return NextResponse.json({ message: "NPM/NIM wajib diisi untuk membuat akun pengurus." }, { status: 400 });
   if (body.email) {
     const existingUser = await prisma.user.findFirst({ where: { OR: [{ nim: body.nim }, { email: body.email }] } });

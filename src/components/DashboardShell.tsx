@@ -7,7 +7,7 @@ import { useState } from "react";
 import {
   FiGrid, FiFileText, FiCalendar, FiImage, FiUsers, FiUserCheck,
   FiAward, FiLayout, FiSettings, FiMail, FiUserPlus, FiMenu, FiX, FiLogOut,
-  FiCamera, FiArchive, FiDollarSign, FiBox, FiEye, FiMessageSquare, FiUser,
+  FiCamera, FiArchive, FiDollarSign, FiBox, FiEye, FiMessageSquare, FiUser, FiKey,
 } from "react-icons/fi";
 import DarkModeToggle from "./DarkModeToggle";
 import type { Kapabilitas } from "@/lib/permissions";
@@ -26,6 +26,7 @@ export default function DashboardShell({ kap, name, avatar, children }: { kap: K
     { href: "/dashboard/presensi", label: "Presensi Kegiatan", icon: FiCamera, show: kap.canUploadPresensi && kap.role === "PENGURUS" },
     { href: "/dashboard/galeri", label: "Kelola Galeri", icon: FiImage, show: kap.canManageGaleriStruktur },
     { href: "/dashboard/pengurus", label: "Kelola Pengurus", icon: FiUserCheck, show: kap.canManagePengurus },
+    { href: "/dashboard/akun", label: "Kelola Akun & Password", icon: FiKey, show: kap.isAdmin },
     { href: "/dashboard/anggota", label: kap.kodeJabatan === "KADIV" ? "Staff Divisi Saya" : "Kelola Anggota", icon: FiUsers, show: kap.canManageAnggota || kap.canManageDivisiStaff },
     { href: "/dashboard/pendaftaran", label: "Pendaftaran Masuk", icon: FiUserPlus, show: kap.canManageAnggota },
     { href: "/dashboard/prestasi", label: "Kelola Prestasi", icon: FiAward, show: kap.canManageGaleriStruktur || kap.isKetuaOrWakil || kap.isAdmin },

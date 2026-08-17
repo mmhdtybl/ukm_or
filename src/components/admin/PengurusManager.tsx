@@ -21,11 +21,12 @@ const KODE_JABATAN_OPTIONS = [
   { value: "BIDANG_INVENTARIS", label: "Bidang Inventaris", kelompok: "Bidang", jabatanDefault: "Bidang Inventaris" },
   { value: "BIDANG_MEDIA", label: "Bidang Media Informasi", kelompok: "Bidang", jabatanDefault: "Bidang Media Informasi" },
   { value: "KADIV", label: "Kepala Divisi (Kadiv)", kelompok: "Kadiv", jabatanDefault: "Kadiv" },
+  { value: "STAFF_DIVISI", label: "Staff Divisi Cabang Olahraga", kelompok: "Staff Divisi", jabatanDefault: "Staff Divisi" },
 ];
 
 const DIVISI_OPTIONS = ["Voli", "Futsal", "Bulutangkis", "E-Sport", "Taekwondo", "Basket"];
 
-export default function PengurusManager({ initialData }: { initialData: any[] }) {
+export default function PengurusManager({ initialData, isAdmin }: { initialData: any[]; isAdmin: boolean }) {
   const router = useRouter();
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
@@ -38,7 +39,7 @@ export default function PengurusManager({ initialData }: { initialData: any[] })
       ...form,
       kodeJabatan: kode,
       kelompok: opt.kelompok,
-      jabatan: form.jabatan && editing ? form.jabatan : opt.jabatanDefault + (kode === "KADIV" && form.divisi ? ` ${form.divisi}` : ""),
+        jabatan: form.jabatan && editing ? form.jabatan : opt.jabatanDefault + ((kode === "KADIV" || kode === "STAFF_DIVISI") && form.divisi ? ` ${form.divisi}` : ""),
     });
   }
 
@@ -56,6 +57,18 @@ export default function PengurusManager({ initialData }: { initialData: any[] })
     }
     setForm(emptyForm);
     if (data.password) setAkunBaru({ nim: data.nim, password: data.password });
+    router.refresh();
+  }
+
+  async function ubahKredensial(p: any) {
+    const email = prompt("Email akun", p.user?.email || "");
+    if (!email) return;
+    const password = prompt("Password baru (kosongkan untuk tidak mengubah password)", "");
+    if (password === null) return;
+    const res = await fetch(`/api/pengurus/${p.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return alert(data.message || "Gagal memperbarui kredensial.");
+    alert("Kredensial berhasil diperbarui.");
     router.refresh();
   }
 
@@ -83,7 +96,7 @@ export default function PengurusManager({ initialData }: { initialData: any[] })
           <input required className="input" value={form.jabatan} onChange={(e) => setForm({ ...form, jabatan: e.target.value })} placeholder="contoh: Ketua Umum" />
         </div>
 
-        {form.kodeJabatan === "KADIV" && (
+        {(form.kodeJabatan === "KADIV" || form.kodeJabatan === "STAFF_DIVISI") && (
           <div>
             <label className="label">Cabang Olahraga</label>
             <select className="input" value={form.divisi} onChange={(e) => setForm({ ...form, divisi: e.target.value })}>
@@ -109,20 +122,23 @@ export default function PengurusManager({ initialData }: { initialData: any[] })
 
       <div className="md:col-span-2 card overflow-x-auto">
         <table className="table-admin">
-          <thead><tr><th>Nama</th><th>Jabatan</th><th>Periode</th><th>Aksi</th></tr></thead>
+          <thead><tr><th>Nama</th><th>Jabatan</th><th>Periode</th><th>Akun</th><th>Aksi</th></tr></thead>
           <tbody>
             {initialData.map((p) => (
               <tr key={p.id}>
                 <td>{p.nama}</td>
                 <td>{p.jabatan}{p.divisi ? ` (${p.divisi})` : ""}</td>
                 <td>{p.periodeMulai}{p.periodeAkhir ? ` – ${p.periodeAkhir}` : " – sekarang"}</td>
+                <td>
+                  {p.userId ? <div className="flex items-center gap-2"><span className="badge bg-green-100 text-green-700">Ada</span>{isAdmin && <button onClick={() => ubahKredensial(p)} className="text-xs font-semibold text-blue-600">Kredensial</button>}</div> : <span className="badge bg-orange-100 text-orange-600">Belum</span>}
+                </td>
                 <td className="flex gap-2">
                   <button onClick={() => setForm({ ...emptyForm, ...p, divisi: p.divisi || "", periodeAkhir: p.periodeAkhir || "" })} className="text-xs text-blue-600 font-semibold">Edit</button>
                   <DataTableActions deleteUrl={`/api/pengurus/${p.id}`} />
                 </td>
               </tr>
             ))}
-            {initialData.length === 0 && <tr><td colSpan={4} className="text-center text-slate-400 py-6">Belum ada data.</td></tr>}
+            {initialData.length === 0 && <tr><td colSpan={5} className="text-center text-slate-400 py-6">Belum ada data.</td></tr>}
           </tbody>
         </table>
       </div>

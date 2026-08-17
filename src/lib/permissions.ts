@@ -11,7 +11,8 @@ export type KodeJabatan =
   | "BIDANG_SDM"
   | "BIDANG_INVENTARIS"
   | "BIDANG_MEDIA"
-  | "KADIV";
+  | "KADIV"
+  | "STAFF_DIVISI";
 
 export const KODE_JABATAN_LABEL: Record<KodeJabatan, string> = {
   DPO: "DPO (Dewan Pertimbangan Organisasi)",
@@ -23,6 +24,7 @@ export const KODE_JABATAN_LABEL: Record<KodeJabatan, string> = {
   BIDANG_INVENTARIS: "Bidang Inventaris",
   BIDANG_MEDIA: "Bidang Media Informasi",
   KADIV: "Kepala Divisi (Kadiv)",
+  STAFF_DIVISI: "Staff Divisi Cabang Olahraga",
 };
 
 export type Kapabilitas = {
@@ -94,7 +96,7 @@ export async function getKapabilitas(): Promise<Kapabilitas | null> {
       canUploadPresensi: !isDPO,
       canKelolaKas: false,
       canKomentarBarang: false,
-      divisiScope: kode === "KADIV" ? pengurus?.divisi || null : null,
+      divisiScope: (kode === "KADIV" || kode === "STAFF_DIVISI") ? pengurus?.divisi || null : null,
       viewOnly: isDPO,
     };
   }
