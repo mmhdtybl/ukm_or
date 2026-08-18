@@ -26,7 +26,7 @@ export default function KontakForm() {
   }
 
   if (status === "success") {
-    return <p className="text-green-600 font-medium">Pesan Anda berhasil terkirim. Terima kasih!</p>;
+    return <p className="text-green-600 font-medium">Laporan Anda berhasil dikirim. Terima kasih atas masukannya!</p>;
   }
 
   return (
@@ -41,14 +41,23 @@ export default function KontakForm() {
       </div>
       <div>
         <label className="label">Subjek</label>
-        <input name="subjek" required className="input" placeholder="Subjek pesan" />
+        <input name="subjek" required className="input" placeholder="Contoh: Tombol pendaftaran tidak dapat dibuka" />
       </div>
       <div>
-        <label className="label">Pesan</label>
-        <textarea name="pesan" required rows={4} className="input" placeholder="Tuliskan pesan Anda..." />
+        <label className="label">Jenis Laporan</label>
+        <select name="jenis" required defaultValue="BUG" className="input">
+          <option value="BUG">Bug atau kesalahan sistem</option>
+          <option value="PERBAIKAN">Permintaan perbaikan</option>
+          <option value="SARAN">Saran pengembangan</option>
+          <option value="LAINNYA">Lainnya</option>
+        </select>
+      </div>
+      <div>
+        <label className="label">Detail Laporan</label>
+        <textarea name="pesan" required rows={5} className="input" placeholder="Jelaskan kendala atau perbaikan yang Anda harapkan. Sertakan langkah yang dilakukan bila melaporkan bug." />
       </div>
       <button disabled={status === "loading"} className="btn-primary w-full">
-        {status === "loading" ? "Mengirim..." : "Kirim Pesan"}
+        {status === "loading" ? "Mengirim..." : "Kirim Laporan"}
       </button>
       {status === "error" && <p className="text-red-500 text-sm">Terjadi kesalahan, silakan coba lagi.</p>}
     </form>

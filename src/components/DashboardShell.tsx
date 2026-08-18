@@ -168,7 +168,7 @@ export default function DashboardShell({
 
     {
       href: "/dashboard/kontak",
-      label: "Pesan Kontak",
+      label: "Laporan Pengguna",
       icon: FiMail,
       show: kap.canManageKontak,
     },

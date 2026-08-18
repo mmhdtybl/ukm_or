@@ -23,7 +23,7 @@ const navLinks = [
   { href: "/berita", label: "Berita" },
   { href: "/agenda", label: "Agenda" },
   { href: "/prestasi", label: "Prestasi" },
-  { href: "/kontak", label: "Kontak" },
+  { href: "/kontak", label: "Laporan" },
 ];
 
 export default function Navbar() {

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getKapabilitas } from "@/lib/permissions";
 import KontakManager from "@/components/admin/KontakManager";
 
-export const metadata = { title: "Pesan Kontak" };
+export const metadata = { title: "Laporan Pengguna" };
 
 export default async function KelolaKontakPage() {
   const kap = await getKapabilitas();
@@ -12,7 +12,7 @@ export default async function KelolaKontakPage() {
   const kontak = await prisma.kontak.findMany({ orderBy: { createdAt: "desc" } });
   return (
     <div>
-      <h1 className="text-2xl font-bold text-primary dark:text-white mb-6">Pesan Masuk dari Halaman Kontak</h1>
+      <h1 className="text-2xl font-bold text-primary dark:text-white mb-6">Laporan Pengguna</h1>
       <KontakManager initialData={JSON.parse(JSON.stringify(kontak))} />
     </div>
   );

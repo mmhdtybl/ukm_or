@@ -84,7 +84,7 @@ export default async function DashboardHomePage() {
       },
     }),
 
-    // Pesan yang belum dibaca
+    // Laporan yang belum dibaca
     prisma.kontak.count({
       where: {
         isRead: false,
@@ -182,7 +182,7 @@ export default async function DashboardHomePage() {
       href: "/dashboard/pendaftaran",
     },
     {
-      label: "Pesan Belum Dibaca",
+      label: "Laporan Baru",
       value: pesanBaru,
       icon: FiMail,
       color: "bg-rose-500",
