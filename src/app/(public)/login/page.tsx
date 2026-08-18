@@ -47,7 +47,7 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="label">NPM/NIM</label>
-            <input name="nim" required className="input" placeholder="Masukkan NPM/NIM Anda" />
+            <input name="nim" required className="input" placeholder="Masukkan NPM/NIM Anda TANPA TITIK" />
           </div>
           <div>
             <label className="label">Kata Sandi</label>
