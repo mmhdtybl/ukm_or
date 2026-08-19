@@ -102,21 +102,25 @@ export async function kirimWhatsApp(
 }
 
 export function pesanPendaftaranDikirim(
-  nama: string,
-  namaUKM: string,
+  _nama: string,
+  _namaUKM: string,
   link?: string
 ) {
   return [
-    `Halo ${nama},`,
-    "",
-    `Terima kasih telah mendaftar di ${namaUKM}.`,
+    "Terima kasih telah mendaftar di UKM Olahraga Unimma.",
     "Pendaftaranmu sudah kami terima dan akan ditinjau oleh tim.",
-    "",
     link
-      ? `Informasi Pradiksar 1 dan grup WhatsApp:\n${link}`
+      ? `Informasi Pradiksar 1 dan Pradiksar 2 silahkan gabung grup WhatsApp:\n${link}`
       : "",
-    "",
-    "Mohon simpan nomor ini dan tunggu informasi selanjutnya.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+export function pesanLolosDiksar(link?: string) {
+  return [
+    "Selamat Anda lolos ke tahap selanjutnya yaitu Pendidikan Dasar.",
+    link ? `Masuk grup WhatsApp:\n${link}` : "",
   ]
     .filter(Boolean)
     .join("\n");

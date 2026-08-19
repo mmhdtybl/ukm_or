@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getKapabilitas } from "@/lib/permissions";
 
-const TAHAP_VALID = ["PRADIKSAR_1", "PRADIKSAR_2", "DIKSAR"] as const;
+const TAHAP_VALID = ["PRADIKSAR_1", "DIKSAR"] as const;
 
 export async function PUT(req: NextRequest) {
   const kap = await getKapabilitas();
@@ -15,8 +15,8 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ message: "Data link tidak valid." }, { status: 400 });
   }
 
-  await prisma.$transaction(
-    TAHAP_VALID.map((tahap) => {
+  await prisma.$transaction([
+    ...TAHAP_VALID.map((tahap) => {
       const link = typeof links[tahap] === "string" ? links[tahap].trim() : "";
       return link
         ? prisma.linkWhatsApp.upsert({
@@ -25,8 +25,9 @@ export async function PUT(req: NextRequest) {
             update: { link },
           })
         : prisma.linkWhatsApp.deleteMany({ where: { tahap } });
-    })
-  );
+    }),
+    prisma.linkWhatsApp.deleteMany({ where: { tahap: "PRADIKSAR_2" } }),
+  ]);
 
   return NextResponse.json({ success: true });
 }

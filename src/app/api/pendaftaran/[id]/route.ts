@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getKapabilitas } from "@/lib/permissions";
-import { kirimWhatsApp, pesanHasilPendaftaran } from "@/lib/whatsapp";
+import {
+  kirimWhatsApp,
+  pesanHasilPendaftaran,
+  pesanLolosDiksar,
+} from "@/lib/whatsapp";
 
 const TAHAP = {
   PRADIKSAR_1: "PRADIKSAR_1",
@@ -139,7 +143,7 @@ export async function PATCH(
 
       const whatsappTerkirim = await kirimWhatsApp(
         updated.noHp,
-        pesanHasilPendaftaran(updated.nama, namaUKM, TAHAP.PRADIKSAR_1, TAHAP.PRADIKSAR_2, linkTahap.get(TAHAP.PRADIKSAR_2))
+        pesanHasilPendaftaran(updated.nama, namaUKM, TAHAP.PRADIKSAR_1, TAHAP.PRADIKSAR_2)
       );
 
       return NextResponse.json({
@@ -173,7 +177,7 @@ export async function PATCH(
 
       const whatsappTerkirim = await kirimWhatsApp(
         updated.noHp,
-        pesanHasilPendaftaran(updated.nama, namaUKM, TAHAP.PRADIKSAR_2, TAHAP.DIKSAR, linkTahap.get(TAHAP.DIKSAR))
+        pesanLolosDiksar(linkTahap.get(TAHAP.DIKSAR))
       );
 
       return NextResponse.json({
@@ -210,7 +214,7 @@ export async function PATCH(
 
       const whatsappTerkirim = await kirimWhatsApp(
         updated.noHp,
-        pesanHasilPendaftaran(updated.nama, namaUKM, TAHAP.DIKSAR, TAHAP.SELESAI, waLink)
+        pesanHasilPendaftaran(updated.nama, namaUKM, TAHAP.DIKSAR, TAHAP.SELESAI)
       );
 
       return NextResponse.json({

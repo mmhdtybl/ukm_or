@@ -153,12 +153,12 @@ export default function PendaftaranManager({
     <div>
       <div className="card mb-6 space-y-4">
         <div>
-          <h2 className="font-semibold">Link Grup WhatsApp per Tahap</h2>
-          <p className="text-sm text-slate-500 mt-1">Link dikirim melalui WhatsApp saat pendaftar memasuki tahap terkait.</p>
+          <h2 className="font-semibold">Link Grup WhatsApp</h2>
+          <p className="text-sm text-slate-500 mt-1">Link Pradiksar dikirim saat pendaftaran, sedangkan link Diksar dikirim setelah lolos Pradiksar 2.</p>
         </div>
-        {(["PRADIKSAR_1", "PRADIKSAR_2", "DIKSAR"] as const).map((tahap) => (
+        {(["PRADIKSAR_1", "DIKSAR"] as const).map((tahap) => (
           <div key={tahap}>
-            <label className="label">Link WhatsApp {tahapLabel[tahap]}</label>
+            <label className="label">{tahap === "PRADIKSAR_1" ? "Link WhatsApp Pradiksar 1 & 2" : "Link WhatsApp Diksar"}</label>
             <input
               type="url"
               className="input"
