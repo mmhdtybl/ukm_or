@@ -171,7 +171,7 @@ model Pendaftaran {
   id            String  @id @default(cuid())
   nama          String
   nim           String
-  email         String
+  email         String?
   noHp          String
   prodi         String
   angkatan      String

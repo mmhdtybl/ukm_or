@@ -1,0 +1,1 @@
+ALTER TABLE "Pendaftaran" ALTER COLUMN "email" DROP NOT NULL;

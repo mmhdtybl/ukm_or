@@ -26,7 +26,6 @@ export default function PendaftaranForm() {
     const payload = {
       nama: String(formData.get("nama") || "").trim(),
       nim: String(formData.get("nim") || "").trim(),
-      email: String(formData.get("email") || "").trim(),
       noHp: String(formData.get("noHp") || "").trim(),
       prodi: String(formData.get("prodi") || "").trim(),
       angkatan: String(formData.get("angkatan") || "").trim(),
@@ -35,8 +34,6 @@ export default function PendaftaranForm() {
       motivasi:
         String(formData.get("motivasi") || "").trim(),
     };
-
-    console.log("DATA PENDAFTARAN:", payload);
 
     try {
       const res = await fetch("/api/pendaftaran", {
@@ -110,8 +107,8 @@ export default function PendaftaranForm() {
         </p>
 
         <p className="text-slate-500 text-sm mt-2">
-          Silakan cek email secara berkala untuk
-          masuk ke grup whatsapp. <b>CEK PADA HALAMAN SPAM</b>.
+          Kami akan mengirim informasi selanjutnya melalui
+          WhatsApp pada nomor yang Anda daftarkan.
         </p>
 
         <button
@@ -145,7 +142,7 @@ export default function PendaftaranForm() {
 
         <div>
           <label className="label">
-            NIM
+            NPM
           </label>
 
           <input
@@ -156,20 +153,7 @@ export default function PendaftaranForm() {
         </div>
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-4">
-        <div>
-          <label className="label">
-            Email
-          </label>
-
-          <input
-            type="email"
-            name="email"
-            required
-            className="input"
-          />
-        </div>
-
+      <div>
         <div>
           <label className="label">
             No. HP / WhatsApp

@@ -64,18 +64,18 @@ export default function PendaftaranManager({
   async function handleAction(
     id: string,
     status: "LULUS" | "TIDAK_LULUS",
-    email: string,
+    noHp: string,
     nama: string,
     tahap: string
   ) {
     const isLulus = status === "LULUS";
 
-    const tujuan = email;
+    const tujuan = noHp;
 
     const konfirmasi = window.confirm(
       `${isLulus ? "LULUSKAN" : "TIDAK LULUSKAN"} pendaftar ini?\n\n` +
         `Nama: ${nama}\n` +
-        `Email tujuan: ${tujuan}\n` +
+        `WhatsApp tujuan: ${tujuan}\n` +
         `Tahap: ${tahapLabel[tahap] || tahap}\n\n` +
         `${
           isLulus
@@ -84,7 +84,7 @@ export default function PendaftaranManager({
               : tahap === "PRADIKSAR_2"
               ? "Pendaftar akan lanjut ke Diksar."
               : "Pendaftar akan dinyatakan lulus dan menerima link WhatsApp."
-            : "Email tidak lulus akan dikirim ke alamat tersebut."
+            : "Notifikasi tidak lulus akan dikirim melalui WhatsApp."
         }`
     );
 
@@ -111,9 +111,9 @@ export default function PendaftaranManager({
       }
 
       alert(
-        data.emailTerkirim
-          ? `Berhasil diproses.\n\nEmail dikirim ke:\n${data.emailTujuan}`
-          : `Status berhasil diubah, tetapi email gagal dikirim ke:\n${data.emailTujuan}`
+        data.whatsappTerkirim
+          ? `Berhasil diproses.\n\nWhatsApp dikirim ke:\n${data.whatsappTujuan}`
+          : `Status berhasil diubah, tetapi WhatsApp gagal dikirim ke:\n${data.whatsappTujuan}`
       );
 
       setDetail(null);
@@ -154,7 +154,7 @@ export default function PendaftaranManager({
       <div className="card mb-6 space-y-4">
         <div>
           <h2 className="font-semibold">Link Grup WhatsApp per Tahap</h2>
-          <p className="text-sm text-slate-500 mt-1">Link dikirim melalui email saat pendaftar memasuki tahap terkait.</p>
+          <p className="text-sm text-slate-500 mt-1">Link dikirim melalui WhatsApp saat pendaftar memasuki tahap terkait.</p>
         </div>
         {(["PRADIKSAR_1", "PRADIKSAR_2", "DIKSAR"] as const).map((tahap) => (
           <div key={tahap}>
@@ -196,7 +196,7 @@ export default function PendaftaranManager({
             <tr>
               <th>Nama</th>
               <th>NIM</th>
-              <th>Email</th>
+              <th>WhatsApp</th>
               <th>Tahap</th>
               <th>Status</th>
               <th>Tanggal</th>
@@ -224,10 +224,10 @@ export default function PendaftaranManager({
                   {/* NIM */}
                   <td>{p.nim}</td>
 
-                  {/* EMAIL */}
+                  {/* WHATSAPP */}
                   <td>
                     <div className="text-sm">
-                      <div>{p.email}</div>
+                      <div>{p.noHp}</div>
 
                       <button
                         onClick={() => {
@@ -277,7 +277,7 @@ export default function PendaftaranManager({
                             handleAction(
                               p.id,
                               "LULUS",
-                              p.email,
+                              p.noHp,
                               p.nama,
                               tahap
                             )
@@ -293,7 +293,7 @@ export default function PendaftaranManager({
                             handleAction(
                               p.id,
                               "TIDAK_LULUS",
-                              p.email,
+                              p.noHp,
                               p.nama,
                               tahap
                             )
@@ -402,9 +402,9 @@ export default function PendaftaranManager({
                 </div>
 
                 <div className="flex justify-between gap-4">
-                  <b>Email Tujuan</b>
+                  <b>WhatsApp Tujuan</b>
                   <span className="text-right break-all">
-                    {detail.email}
+                    {detail.noHp}
                   </span>
                 </div>
 
@@ -480,11 +480,11 @@ export default function PendaftaranManager({
               {detail.status === "PENDING" && (
                 <div className="border-t pt-4">
                   <p className="text-xs text-slate-500 mb-3">
-                    Email akan dikirim ke:
+                    Notifikasi WhatsApp akan dikirim ke:
                   </p>
 
                   <div className="bg-slate-100 dark:bg-white/10 rounded-lg p-3 text-sm mb-3 break-all">
-                    {detail.email}
+                    {detail.noHp}
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -494,7 +494,7 @@ export default function PendaftaranManager({
                         handleAction(
                           detail.id,
                           "LULUS",
-                          detail.email,
+                          detail.noHp,
                           detail.nama,
                           detail.tahap || "PRADIKSAR_1"
                         )
@@ -503,7 +503,7 @@ export default function PendaftaranManager({
                     >
                       {loadingId === detail.id
                         ? "Mengirim..."
-                        : "✓ Lulus & Kirim Email"}
+                        : "✓ Lulus & Kirim WhatsApp"}
                     </button>
 
                     <button
@@ -512,7 +512,7 @@ export default function PendaftaranManager({
                         handleAction(
                           detail.id,
                           "TIDAK_LULUS",
-                          detail.email,
+                          detail.noHp,
                           detail.nama,
                           detail.tahap || "PRADIKSAR_1"
                         )

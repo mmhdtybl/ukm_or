@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import {
-  sendMail,
-  templatePendaftaranDikirim,
-} from "@/lib/email";
+import { kirimWhatsApp, pesanPendaftaranDikirim } from "@/lib/whatsapp";
 import { z } from "zod";
 
 const schema = z.object({
   nama: z.string().min(2),
   nim: z.string().min(3),
-  email: z.string().email(),
   noHp: z.string().min(8),
   prodi: z.string().min(2),
   angkatan: z.string().min(2),
@@ -20,8 +16,6 @@ const schema = z.object({
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-
-    console.log("BODY PENDAFTARAN:", body);
 
     const parsed = schema.safeParse(body);
 
@@ -67,7 +61,6 @@ export async function POST(req: NextRequest) {
         data: {
           nama: data.nama,
           nim: data.nim,
-          email: data.email,
           noHp: data.noHp,
           prodi: data.prodi,
           angkatan: data.angkatan,
@@ -89,10 +82,9 @@ export async function POST(req: NextRequest) {
       profil?.namaUKM ||
       "UKM Olahraga Unimma";
 
-    const emailSent = await sendMail(
-      pendaftaran.email,
-      `Pendaftaran Pradiksar 1 - ${namaUKM}`,
-      templatePendaftaranDikirim(
+    const whatsappTerkirim = await kirimWhatsApp(
+      pendaftaran.noHp,
+      pesanPendaftaranDikirim(
         pendaftaran.nama,
         namaUKM,
         linkPradiksar1?.link
@@ -102,12 +94,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        message: emailSent
-          ? "Pendaftaran berhasil. Email konfirmasi telah dikirim."
-          : "Pendaftaran berhasil, tetapi email konfirmasi gagal dikirim.",
+        message: whatsappTerkirim
+          ? "Pendaftaran berhasil. Konfirmasi telah dikirim melalui WhatsApp."
+          : "Pendaftaran berhasil, tetapi konfirmasi WhatsApp gagal dikirim.",
         data: pendaftaran,
-        emailTerkirim: emailSent,
-        emailTujuan: pendaftaran.email,
+        whatsappTerkirim,
+        whatsappTujuan: pendaftaran.noHp,
       },
       { status: 201 }
     );

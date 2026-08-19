@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getKapabilitas } from "@/lib/permissions";
-import {
-  sendMail,
-  templatePendaftaranLulus,
-  templatePendaftaranDitolak,
-} from "@/lib/email";
+import { kirimWhatsApp, pesanHasilPendaftaran } from "@/lib/whatsapp";
 
 const TAHAP = {
   PRADIKSAR_1: "PRADIKSAR_1",
@@ -104,24 +100,19 @@ export async function PATCH(
         },
       });
 
-      const emailSent = await sendMail(
-        updated.email,
-        `Hasil Seleksi ${namaUKM}`,
-        templatePendaftaranDitolak(
-          updated.nama,
-          namaUKM,
-          tahapSekarang
-        )
+      const whatsappTerkirim = await kirimWhatsApp(
+        updated.noHp,
+        pesanHasilPendaftaran(updated.nama, namaUKM, tahapSekarang)
       );
 
       return NextResponse.json({
         success: true,
-        message: emailSent
-          ? "Pendaftar dinyatakan tidak lulus dan email telah dikirim."
-          : "Pendaftar dinyatakan tidak lulus, tetapi email gagal dikirim.",
+        message: whatsappTerkirim
+          ? "Pendaftar dinyatakan tidak lulus dan notifikasi WhatsApp telah dikirim."
+          : "Pendaftar dinyatakan tidak lulus, tetapi notifikasi WhatsApp gagal dikirim.",
         data: updated,
-        emailTerkirim: emailSent,
-        emailTujuan: updated.email,
+        whatsappTerkirim,
+        whatsappTujuan: updated.noHp,
       });
     }
 
@@ -146,26 +137,19 @@ export async function PATCH(
         },
       });
 
-      const emailSent = await sendMail(
-        updated.email,
-        `Lulus Pradiksar 1 - ${namaUKM}`,
-        templatePendaftaranLulus(
-          updated.nama,
-          namaUKM,
-          TAHAP.PRADIKSAR_1,
-          TAHAP.PRADIKSAR_2,
-          linkTahap.get(TAHAP.PRADIKSAR_2)
-        )
+      const whatsappTerkirim = await kirimWhatsApp(
+        updated.noHp,
+        pesanHasilPendaftaran(updated.nama, namaUKM, TAHAP.PRADIKSAR_1, TAHAP.PRADIKSAR_2, linkTahap.get(TAHAP.PRADIKSAR_2))
       );
 
       return NextResponse.json({
         success: true,
-        message: emailSent
-          ? "Lulus Pradiksar 1. Email Pradiksar 2 berhasil dikirim."
-          : "Lulus Pradiksar 1, tetapi email gagal dikirim.",
+        message: whatsappTerkirim
+          ? "Lulus Pradiksar 1. Notifikasi Pradiksar 2 telah dikirim melalui WhatsApp."
+          : "Lulus Pradiksar 1, tetapi notifikasi WhatsApp gagal dikirim.",
         data: updated,
-        emailTerkirim: emailSent,
-        emailTujuan: updated.email,
+        whatsappTerkirim,
+        whatsappTujuan: updated.noHp,
       });
     }
 
@@ -187,26 +171,19 @@ export async function PATCH(
         },
       });
 
-      const emailSent = await sendMail(
-        updated.email,
-        `Lulus Pradiksar 2 - ${namaUKM}`,
-        templatePendaftaranLulus(
-          updated.nama,
-          namaUKM,
-          TAHAP.PRADIKSAR_2,
-          TAHAP.DIKSAR,
-          linkTahap.get(TAHAP.DIKSAR)
-        )
+      const whatsappTerkirim = await kirimWhatsApp(
+        updated.noHp,
+        pesanHasilPendaftaran(updated.nama, namaUKM, TAHAP.PRADIKSAR_2, TAHAP.DIKSAR, linkTahap.get(TAHAP.DIKSAR))
       );
 
       return NextResponse.json({
         success: true,
-        message: emailSent
-          ? "Lulus Pradiksar 2. Email Diksar berhasil dikirim."
-          : "Lulus Pradiksar 2, tetapi email gagal dikirim.",
+        message: whatsappTerkirim
+          ? "Lulus Pradiksar 2. Notifikasi Diksar telah dikirim melalui WhatsApp."
+          : "Lulus Pradiksar 2, tetapi notifikasi WhatsApp gagal dikirim.",
         data: updated,
-        emailTerkirim: emailSent,
-        emailTujuan: updated.email,
+        whatsappTerkirim,
+        whatsappTujuan: updated.noHp,
       });
     }
 
@@ -231,26 +208,19 @@ export async function PATCH(
         },
       });
 
-      const emailSent = await sendMail(
-        updated.email,
-        `🎉 Selamat! Anda Lulus Diksar - ${namaUKM}`,
-        templatePendaftaranLulus(
-          updated.nama,
-          namaUKM,
-          TAHAP.DIKSAR,
-          TAHAP.SELESAI,
-          waLink
-        )
+      const whatsappTerkirim = await kirimWhatsApp(
+        updated.noHp,
+        pesanHasilPendaftaran(updated.nama, namaUKM, TAHAP.DIKSAR, TAHAP.SELESAI, waLink)
       );
 
       return NextResponse.json({
         success: true,
-        message: emailSent
-          ? "Pendaftar lulus seluruh proses dan email berhasil dikirim."
-          : "Pendaftar lulus seluruh proses, tetapi email gagal dikirim.",
+        message: whatsappTerkirim
+          ? "Pendaftar lulus seluruh proses dan notifikasi WhatsApp telah dikirim."
+          : "Pendaftar lulus seluruh proses, tetapi notifikasi WhatsApp gagal dikirim.",
         data: updated,
-        emailTerkirim: emailSent,
-        emailTujuan: updated.email,
+        whatsappTerkirim,
+        whatsappTujuan: updated.noHp,
         whatsappLink: waLink || null,
       });
     }
