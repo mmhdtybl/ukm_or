@@ -11,13 +11,11 @@ import {
 interface KameraPresensiProps {
   agendaId: string;
   onChange?: (file: File) => void;
-  onSave?: (file: File) => Promise<void> | void;
 }
 
 export default function KameraPresensi({
   agendaId,
   onChange,
-  onSave,
 }: KameraPresensiProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -28,10 +26,6 @@ export default function KameraPresensi({
   const [fileFoto, setFileFoto] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
-
-  // =====================================================
-  // AKTIFKAN KAMERA
-  // =====================================================
 
   async function nyalakanKamera() {
     try {
@@ -64,17 +58,13 @@ export default function KameraPresensi({
 
       setKameraAktif(true);
     } catch (err) {
-      console.error(err);
+      console.error("Gagal mengaktifkan kamera:", err);
 
       setError(
         "Kamera tidak dapat diakses. Pastikan izin kamera sudah diberikan."
       );
     }
   }
-
-  // =====================================================
-  // MATIKAN KAMERA
-  // =====================================================
 
   function matikanKamera() {
     if (streamRef.current) {
@@ -92,10 +82,6 @@ export default function KameraPresensi({
     setKameraAktif(false);
   }
 
-  // =====================================================
-  // AMBIL FOTO
-  // =====================================================
-
   function ambilFoto() {
     if (!videoRef.current || !canvasRef.current) {
       return;
@@ -103,6 +89,11 @@ export default function KameraPresensi({
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
+
+    if (!video.videoWidth || !video.videoHeight) {
+      setError("Kamera belum siap. Silakan tunggu beberapa saat.");
+      return;
+    }
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -151,10 +142,6 @@ export default function KameraPresensi({
     matikanKamera();
   }
 
-  // =====================================================
-  // FOTO ULANG
-  // =====================================================
-
   function fotoUlang() {
     setPreview("");
     setFileFoto(null);
@@ -162,10 +149,6 @@ export default function KameraPresensi({
 
     nyalakanKamera();
   }
-
-  // =====================================================
-  // SIMPAN
-  // =====================================================
 
   async function simpanFoto() {
     if (!fileFoto) {
@@ -177,44 +160,70 @@ export default function KameraPresensi({
       setSaving(true);
       setError("");
 
-      if (onSave) {
-        await onSave(fileFoto);
-      } else {
-        const formData = new FormData();
-        formData.append("file", fileFoto);
+      
 
-        const uploadRes = await fetch("/api/upload", { method: "POST", body: formData });
-        const uploadData = await uploadRes.json();
-        if (!uploadRes.ok || !uploadData.url) {
-          throw new Error(uploadData.message || "Gagal mengunggah foto.");
-        }
+      // =====================================================
+      // UPLOAD FOTO
+      // =====================================================
 
-        const presensiRes = await fetch("/api/presensi", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ agendaId, fotoUrl: uploadData.url }),
-        });
-        const presensiData = await presensiRes.json();
-        if (!presensiRes.ok) {
-          throw new Error(presensiData.message || "Gagal menyimpan presensi.");
-        }
+      const formData = new FormData();
+      formData.append("file", fileFoto);
 
-        setPreview("");
-        setFileFoto(null);
-        window.location.assign("/dashboard/presensi");
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const uploadData = await uploadRes.json();
+
+      if (!uploadRes.ok || !uploadData.url) {
+        throw new Error(
+          uploadData.message || "Gagal mengunggah foto."
+        );
       }
-    } catch (err) {
-      console.error(err);
 
-      setError("Gagal menyimpan foto presensi.");
+      // =====================================================
+      // SIMPAN ABSENSI
+      // =====================================================
+
+      const absensiRes = await fetch("/api/absensi", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          agendaId,
+          status: "HADIR",
+          fotoUrl: uploadData.url,
+        }),
+      });
+
+      const absensiData = await absensiRes.json();
+
+      if (!absensiRes.ok) {
+        throw new Error(
+          absensiData.message || "Gagal menyimpan presensi."
+        );
+      }
+
+      setPreview("");
+      setFileFoto(null);
+
+      window.location.assign(
+        `/akun-saya/absensi/${agendaId}`
+      );
+    } catch (err) {
+      console.error("Gagal menyimpan presensi:", err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Gagal menyimpan foto presensi."
+      );
     } finally {
       setSaving(false);
     }
   }
-
-  // =====================================================
-  // CLEANUP KAMERA
-  // =====================================================
 
   useEffect(() => {
     return () => {
@@ -226,14 +235,11 @@ export default function KameraPresensi({
     };
   }, []);
 
-  // =====================================================
-  // RENDER
-  // =====================================================
-
   return (
     <div className="space-y-5">
 
       {/* CAMERA / PREVIEW */}
+
       <div className="relative overflow-hidden rounded-2xl bg-black aspect-video">
 
         {!preview && (
@@ -248,7 +254,6 @@ export default function KameraPresensi({
           />
         )}
 
-        {/* KAMERA BELUM AKTIF */}
         {!kameraAktif && !preview && (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-white px-6 text-center">
             <div className="h-16 w-16 rounded-full bg-white/10 grid place-items-center mb-4">
@@ -265,7 +270,6 @@ export default function KameraPresensi({
           </div>
         )}
 
-        {/* PREVIEW FOTO */}
         {preview && (
           <img
             src={preview}
@@ -274,7 +278,6 @@ export default function KameraPresensi({
           />
         )}
 
-        {/* OVERLAY KAMERA */}
         {kameraAktif && (
           <div className="absolute inset-0 pointer-events-none">
 
@@ -290,13 +293,13 @@ export default function KameraPresensi({
         )}
       </div>
 
-      {/* CANVAS */}
       <canvas
         ref={canvasRef}
         className="hidden"
       />
 
       {/* ERROR */}
+
       {error && (
         <div className="rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-500">
           {error}
@@ -304,6 +307,7 @@ export default function KameraPresensi({
       )}
 
       {/* AKTIFKAN KAMERA */}
+
       {!kameraAktif && !preview && (
         <button
           type="button"
@@ -316,6 +320,7 @@ export default function KameraPresensi({
       )}
 
       {/* AMBIL FOTO */}
+
       {kameraAktif && (
         <button
           type="button"
@@ -327,7 +332,8 @@ export default function KameraPresensi({
         </button>
       )}
 
-      {/* SETELAH FOTO DIAMBIL */}
+      {/* SETELAH FOTO */}
+
       {preview && fileFoto && (
         <div className="space-y-3">
 
@@ -336,26 +342,22 @@ export default function KameraPresensi({
             Foto berhasil diambil
           </div>
 
-          {/* SIMPAN */}
           <button
             type="button"
             onClick={simpanFoto}
             disabled={saving}
-            className="btn-primary w-full flex items-center justify-center gap-2"
+            className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50"
           >
             <FiSave size={18} />
 
-            {saving
-              ? "Menyimpan..."
-              : "Simpan Presensi"}
+            {saving ? "Menyimpan..." : "Simpan Presensi"}
           </button>
 
-          {/* FOTO ULANG */}
           <button
             type="button"
             onClick={fotoUlang}
             disabled={saving}
-            className="btn-outline w-full flex items-center justify-center gap-2"
+            className="btn-outline w-full flex items-center justify-center gap-2 disabled:opacity-50"
           >
             <FiRefreshCw size={17} />
             Foto Ulang

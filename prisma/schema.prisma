@@ -130,11 +130,13 @@ model AbsensiAnggota {
   userId     String
   fotoUrl    String?
   status     String   @default("HADIR")
+  alasanIzin String?
   keterangan String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @default(now()) @updatedAt
-  agenda     Agenda   @relation(fields: [agendaId], references: [id], onDelete: Cascade)
-  user       User     @relation("AbsensiUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  agenda Agenda @relation(fields: [agendaId], references: [id], onDelete: Cascade)
+  user   User   @relation("AbsensiUser", fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([agendaId, userId])
   @@index([agendaId])
@@ -168,30 +170,23 @@ model Prestasi {
 }
 
 model Pendaftaran {
-  id            String  @id @default(cuid())
-  nama          String
-  nim           String
-  email         String?
-  noHp          String
-  prodi         String
-  angkatan      String
-  motivasi      String
-  divisiPilihan String?
-
-  // Tahapan seleksi
-  tahap String @default("PRADIKSAR_1")
-
-  // Status pada tahap berjalan
-  status String @default("PENDING")
-
-  // Waktu kelulusan setiap tahap
-  tanggalPradiksar1 DateTime?
-  tanggalPradiksar2 DateTime?
+  id                String    @id @default(cuid())
+  nama              String
+  nim               String
+  email             String?
+  noHp              String
+  prodi             String
+  angkatan          String
+  motivasi          String
+  divisiPilihan     String?
+  status            String    @default("PENDING")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @default(now()) @updatedAt
+  tahap             String    @default("PRADIKSAR_1")
   tanggalDiksar     DateTime?
   tanggalLulus      DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  tanggalPradiksar1 DateTime?
+  tanggalPradiksar2 DateTime?
 
   @@index([nim])
   @@index([status])
@@ -303,6 +298,7 @@ model KomentarBarang {
   @@index([anggotaId])
   @@index([barangId])
 }
+
 model LinkWhatsApp {
   id        String   @id @default(cuid())
   tahap     String   @unique

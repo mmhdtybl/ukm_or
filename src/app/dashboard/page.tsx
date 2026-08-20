@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import Link from "next/link";
+import Image from "next/image";
+import { formatTanggal } from "@/lib/utils";
 import {
   FiUsers,
   FiFileText,
@@ -8,40 +11,26 @@ import {
   FiUserPlus,
   FiMail,
   FiCamera,
+  FiCheckCircle,
+  FiClock,
+  FiArrowRight,
 } from "react-icons/fi";
-import Link from "next/link";
-import { formatTanggal } from "@/lib/utils";
 
 export const metadata = {
-  title: "Statistik Dashboard",
+  title: "Dashboard UKM",
 };
 
 export default async function DashboardHomePage() {
-  // ==========================================
-  // SESSION USER
-  // ==========================================
   const session = await auth();
-
   const namaPengguna = session?.user?.name || "Pengguna";
 
-  // ==========================================
-  // SAPAAN BERDASARKAN WAKTU
-  // ==========================================
   const jam = new Date().getHours();
-
   let sapaan = "Selamat malam";
 
-  if (jam >= 5 && jam < 11) {
-    sapaan = "Selamat pagi";
-  } else if (jam >= 11 && jam < 15) {
-    sapaan = "Selamat siang";
-  } else if (jam >= 15 && jam < 18) {
-    sapaan = "Selamat sore";
-  }
+  if (jam >= 5 && jam < 11) sapaan = "Selamat pagi";
+  else if (jam >= 11 && jam < 15) sapaan = "Selamat siang";
+  else if (jam >= 15 && jam < 18) sapaan = "Selamat sore";
 
-  // ==========================================
-  // DATA DASHBOARD
-  // ==========================================
   const [
     jumlahAnggota,
     jumlahPengurus,
@@ -54,90 +43,48 @@ export default async function DashboardHomePage() {
     pendaftaranTerbaru,
     agendaBerlangsung,
   ] = await Promise.all([
-    // Total anggota aktif
-    prisma.anggota.count({
-      where: {
-        status: "Aktif",
-      },
-    }),
-
-    // Total pengurus aktif
-    prisma.pengurus.count({
-      where: {
-        isActive: true,
-      },
-    }),
-
-    // Total berita
+    prisma.anggota.count({ where: { status: "Aktif" } }),
+    prisma.pengurus.count({ where: { isActive: true } }),
     prisma.berita.count(),
-
-    // Total agenda
     prisma.agenda.count(),
-
-    // Total prestasi
     prisma.prestasi.count(),
-
-    // Pendaftaran yang masih pending
-    prisma.pendaftaran.count({
-      where: {
-        status: "PENDING",
-      },
-    }),
-
-    // Laporan yang belum dibaca
-    prisma.kontak.count({
-      where: {
-        isRead: false,
-      },
-    }),
-
-    // 5 agenda terbaru
+    prisma.pendaftaran.count({ where: { status: "PENDING" } }),
+    prisma.kontak.count({ where: { isRead: false } }),
     prisma.agenda.findMany({
-      orderBy: {
-        tanggalMulai: "desc",
-      },
+      orderBy: { tanggalMulai: "desc" },
       take: 5,
     }),
-
-    // 5 pendaftaran pending terbaru
     prisma.pendaftaran.findMany({
-      where: {
-        status: "PENDING",
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
+      where: { status: "PENDING" },
+      orderBy: { createdAt: "desc" },
       take: 5,
     }),
-
-    // Agenda yang sedang berlangsung
     prisma.agenda.findMany({
-      where: {
-        status: "BERLANGSUNG",
-      },
-      orderBy: {
-        tanggalMulai: "asc",
-      },
+      where: { status: "BERLANGSUNG" },
       include: {
+        absensiAnggota: {
+          include: {
+            user: {
+              select: {
+                name: true,
+                role: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "asc",
+          },
+        },
         presensiFoto: {
           orderBy: {
             createdAt: "desc",
           },
-          include: {
-            diunggahOleh: {
-              select: {
-                name: true,
-              },
-            },
-          },
+          take: 4,
         },
       },
     }),
   ]);
 
-  // ==========================================
-  // STATISTIK
-  // ==========================================
   const stats = [
     {
       label: "Total Anggota",
@@ -147,42 +94,42 @@ export default async function DashboardHomePage() {
       href: "/dashboard/anggota",
     },
     {
-      label: "Total Pengurus",
+      label: "Pengurus",
       value: jumlahPengurus,
       icon: FiUserPlus,
       color: "bg-cyan-500",
       href: "/dashboard/pengurus",
     },
     {
-      label: "Total Berita",
+      label: "Berita",
       value: jumlahBerita,
       icon: FiFileText,
       color: "bg-emerald-500",
       href: "/dashboard/berita",
     },
     {
-      label: "Total Agenda",
+      label: "Agenda",
       value: jumlahAgenda,
       icon: FiCalendar,
-      color: "bg-accent",
+      color: "bg-yellow-500",
       href: "/dashboard/agenda",
     },
     {
-      label: "Total Prestasi",
+      label: "Prestasi",
       value: jumlahPrestasi,
       icon: FiAward,
       color: "bg-purple-500",
       href: "/dashboard/prestasi",
     },
     {
-      label: "Pendaftaran Menunggu",
+      label: "Pendaftaran",
       value: pendaftaranPending,
       icon: FiUserPlus,
       color: "bg-orange-500",
       href: "/dashboard/pendaftaran",
     },
     {
-      label: "Laporan Baru",
+      label: "Pesan Baru",
       value: pesanBaru,
       icon: FiMail,
       color: "bg-rose-500",
@@ -191,241 +138,415 @@ export default async function DashboardHomePage() {
   ];
 
   return (
-    <div>
-      {/* ==========================================
-          SAPAAN
-      ========================================== */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-primary dark:text-white">
+    <div className="space-y-8">
+
+      {/* SAPAAN */}
+
+      <div>
+        <h1 className="text-3xl font-bold text-primary dark:text-white">
           {sapaan}, {namaPengguna}! 👋
         </h1>
 
-        <p className="text-slate-500 mt-1">
+        <p className="text-slate-500 mt-2">
           Selamat datang kembali di Dashboard UKM Olahraga.
         </p>
       </div>
 
-      {/* ==========================================
-          JUDUL STATISTIK
-      ========================================== */}
-      <div className="mb-5">
-        <h2 className="text-lg font-semibold text-primary dark:text-white">
-          Dashboard Statistik
+      {/* STATISTIK */}
+
+      <div>
+        <h2 className="text-lg font-semibold mb-4">
+          Statistik UKM
         </h2>
 
-        <p className="text-sm text-slate-500">
-          Ringkasan aktivitas UKM secara keseluruhan.
-        </p>
-      </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-4">
 
-      {/* ==========================================
-          STATISTIK CARDS
-      ========================================== */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10">
-        {stats.map((s) => {
-          const Icon = s.icon;
+          {stats.map((s) => {
+            const Icon = s.icon;
 
-          return (
-            <Link
-              key={s.label}
-              href={s.href}
-              className="card flex items-center gap-4 hover:-translate-y-1 hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary/40"
-            >
-              <div
-                className={`grid h-12 w-12 place-items-center rounded-xl ${s.color} text-white shrink-0`}
+            return (
+              <Link
+                key={s.label}
+                href={s.href}
+                className="card hover:-translate-y-1 hover:shadow-lg transition"
               >
-                <Icon size={20} />
-              </div>
+                <div
+                  className={`h-11 w-11 rounded-xl ${s.color} text-white grid place-items-center mb-3`}
+                >
+                  <Icon size={20} />
+                </div>
 
-              <div className="min-w-0">
                 <div className="text-2xl font-bold">
                   {s.value}
                 </div>
 
-                <div className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500">
                   {s.label}
-                </div>
-              </div>
-            </Link>
-          );
-        })}
+                </p>
+              </Link>
+            );
+          })}
+
+        </div>
       </div>
 
-      {/* ==========================================
-          AGENDA TERBARU + PENDAFTARAN
-      ========================================== */}
+      {/* PRESENSI BERLANGSUNG */}
+
+      <div className="card">
+
+        <div className="flex justify-between items-center mb-6">
+
+          <div>
+
+            <h2 className="font-bold text-lg flex items-center gap-2">
+              <FiCamera className="text-primary" />
+              Presensi Kegiatan Berlangsung
+            </h2>
+
+            <p className="text-sm text-slate-500">
+              Ranking peserta tercepat dan dokumentasi kegiatan.
+            </p>
+
+          </div>
+
+          <Link
+            href="/dashboard/presensi"
+            className="text-primary flex items-center gap-1 text-sm font-semibold"
+          >
+            Lihat semua
+            <FiArrowRight />
+          </Link>
+
+        </div>
+
+        {agendaBerlangsung.length === 0 ? (
+
+          <p className="text-slate-500">
+            Tidak ada agenda yang sedang berlangsung.
+          </p>
+
+        ) : (
+
+          <div className="space-y-8">
+
+            {agendaBerlangsung.map((agenda) => {
+
+              const hadir = agenda.absensiAnggota.filter(
+                (a) => a.status === "HADIR"
+              ).length;
+
+              const izin = agenda.absensiAnggota.filter(
+                (a) => a.status === "IZIN"
+              ).length;
+
+              const ranking = agenda.absensiAnggota.filter(
+                (a) => a.status === "HADIR"
+              );
+
+              return (
+                <div
+                  key={agenda.id}
+                  className="border rounded-2xl p-5 dark:border-slate-800"
+                >
+
+                  <div className="flex justify-between items-center mb-5">
+
+                    <div>
+
+                      <h3 className="font-bold text-lg">
+                        {agenda.judul}
+                      </h3>
+
+                      <p className="text-sm text-slate-500">
+                        {formatTanggal(agenda.tanggalMulai)}
+                      </p>
+
+                    </div>
+
+                    <Link
+                      href={`/akun-saya/absensi/${agenda.id}`}
+                      className="btn-outline text-sm"
+                    >
+                      Detail
+                    </Link>
+
+                  </div>
+
+                  {/* Statistik Presensi */}
+
+                  <div className="grid grid-cols-3 gap-3 mb-6">
+
+                    <div className="rounded-xl bg-green-50 dark:bg-green-900/10 p-3 text-center">
+
+                      <FiCheckCircle
+                        className="mx-auto text-green-600 mb-2"
+                        size={20}
+                      />
+
+                      <p className="text-xl font-bold">
+                        {hadir}
+                      </p>
+
+                      <p className="text-xs text-slate-500">
+                        Hadir
+                      </p>
+
+                    </div>
+
+                    <div className="rounded-xl bg-blue-50 dark:bg-blue-900/10 p-3 text-center">
+
+                      <FiClock
+                        className="mx-auto text-blue-600 mb-2"
+                        size={20}
+                      />
+
+                      <p className="text-xl font-bold">
+                        {izin}
+                      </p>
+
+                      <p className="text-xs text-slate-500">
+                        Izin
+                      </p>
+
+                    </div>
+
+                    <div className="rounded-xl bg-yellow-50 dark:bg-yellow-900/10 p-3 text-center">
+
+                      <FiUsers
+                        className="mx-auto text-yellow-600 mb-2"
+                        size={20}
+                      />
+
+                      <p className="text-xl font-bold">
+                        {agenda.absensiAnggota.length}
+                      </p>
+
+                      <p className="text-xs text-slate-500">
+                        Total
+                      </p>
+
+                    </div>
+
+                  </div>
+
+                  {/* PODIUM */}
+
+                  <div className="mb-6">
+
+                    <h4 className="font-semibold mb-4 flex items-center gap-2">
+
+                      <FiAward className="text-yellow-500" />
+
+                      Top 3 Datang Paling Awal
+
+                    </h4>
+
+                    {ranking.length === 0 ? (
+
+                      <p className="text-sm text-slate-500">
+                        Belum ada peserta yang hadir.
+                      </p>
+
+                    ) : (
+
+                      <div className="grid md:grid-cols-3 gap-4">
+
+                        {ranking.slice(0, 3).map((item, index) => {
+
+                          const warna =
+                            index === 0
+                              ? "from-yellow-400 to-yellow-600"
+                              : index === 1
+                              ? "from-slate-300 to-slate-500"
+                              : "from-orange-400 to-orange-600";
+
+                          const medal =
+                            index === 0
+                              ? "🥇"
+                              : index === 1
+                              ? "🥈"
+                              : "🥉";
+
+                          return (
+                            <div
+                              key={item.id}
+                              className={`rounded-2xl bg-gradient-to-b ${warna} text-white p-5 text-center`}
+                            >
+
+                              <div className="text-4xl mb-3">
+                                {medal}
+                              </div>
+
+                              <h5 className="font-bold">
+                                {item.user.name}
+                              </h5>
+
+                              <p className="text-xs opacity-90">
+                                {item.user.role}
+                              </p>
+
+                              <p className="mt-3 font-semibold">
+                                {item.createdAt.toLocaleTimeString(
+                                  "id-ID",
+                                  {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  }
+                                )}
+                              </p>
+
+                            </div>
+                          );
+                        })}
+
+                      </div>
+
+                    )}
+
+                  </div>
+
+                  {/* GALERI */}
+
+                  <div>
+
+                    <h4 className="font-semibold mb-3">
+                      Dokumentasi Terbaru
+                    </h4>
+
+                    {agenda.presensiFoto.length === 0 ? (
+
+                      <p className="text-sm text-slate-500">
+                        Belum ada dokumentasi.
+                      </p>
+
+                    ) : (
+
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+
+                        {agenda.presensiFoto.map((foto) => (
+
+                          <div
+                            key={foto.id}
+                            className="relative aspect-video rounded-xl overflow-hidden"
+                          >
+
+                            <Image
+                              src={foto.fotoUrl}
+                              alt="Dokumentasi"
+                              fill
+                              className="object-cover hover:scale-105 transition"
+                            />
+
+                          </div>
+
+                        ))}
+
+                      </div>
+
+                    )}
+
+                  </div>
+
+                </div>
+              );
+            })}
+
+          </div>
+
+        )}
+
+      </div>
+
+      {/* AGENDA & PENDAFTARAN */}
+
       <div className="grid md:grid-cols-2 gap-6">
-        {/* AGENDA TERBARU */}
+
         <div className="card">
-          <div className="flex items-center justify-between mb-4">
+
+          <div className="flex justify-between items-center mb-4">
+
             <h2 className="font-semibold">
               Agenda Terbaru
             </h2>
 
             <Link
               href="/dashboard/agenda"
-              className="text-xs text-primary dark:text-accent font-semibold"
+              className="text-primary text-sm font-semibold"
             >
               Lihat semua →
             </Link>
+
           </div>
 
           <ul className="space-y-3">
+
             {agendaTerbaru.map((a) => (
+
               <li
                 key={a.id}
-                className="flex justify-between gap-4 text-sm border-b border-slate-100 dark:border-slate-800 pb-2"
+                className="flex justify-between border-b pb-2 text-sm"
               >
+
                 <span className="truncate">
                   {a.judul}
                 </span>
 
-                <span className="text-slate-400 whitespace-nowrap">
+                <span className="text-slate-400">
                   {formatTanggal(a.tanggalMulai)}
                 </span>
+
               </li>
+
             ))}
 
-            {agendaTerbaru.length === 0 && (
-              <p className="text-slate-400 text-sm">
-                Belum ada agenda.
-              </p>
-            )}
           </ul>
+
         </div>
 
-        {/* PENDAFTARAN MENUNGGU */}
         <div className="card">
-          <div className="flex items-center justify-between mb-4">
+
+          <div className="flex justify-between items-center mb-4">
+
             <h2 className="font-semibold">
               Pendaftaran Menunggu
             </h2>
 
             <Link
               href="/dashboard/pendaftaran"
-              className="text-xs text-primary dark:text-accent font-semibold"
+              className="text-primary text-sm font-semibold"
             >
               Lihat semua →
             </Link>
+
           </div>
 
           <ul className="space-y-3">
+
             {pendaftaranTerbaru.map((p) => (
+
               <li
                 key={p.id}
-                className="flex items-center justify-between gap-4 text-sm border-b border-slate-100 dark:border-slate-800 pb-2"
+                className="flex justify-between border-b pb-2 text-sm"
               >
-                <span className="truncate">
-                  {p.nama}{" "}
-                  <span className="text-slate-400">
-                    ({p.nim})
-                  </span>
+
+                <span>
+                  {p.nama}
                 </span>
 
-                <span className="badge bg-orange-100 text-orange-600 shrink-0">
+                <span className="text-orange-500 font-semibold">
                   Pending
                 </span>
+
               </li>
+
             ))}
 
-            {pendaftaranTerbaru.length === 0 && (
-              <p className="text-slate-400 text-sm">
-                Tidak ada pendaftaran menunggu.
-              </p>
-            )}
           </ul>
-        </div>
-      </div>
 
-      {/* ==========================================
-          PRESENSI FOTO
-      ========================================== */}
-      <div className="card mt-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary dark:bg-white/10 dark:text-accent">
-            <FiCamera size={19} />
-          </div>
-
-          <div>
-            <h2 className="font-semibold">
-              Pengunggah Foto Presensi
-            </h2>
-
-            <p className="text-xs text-slate-500">
-              Agenda yang sedang berlangsung.
-            </p>
-          </div>
         </div>
 
-        {agendaBerlangsung.length === 0 ? (
-          <p className="text-sm text-slate-400">
-            Tidak ada agenda yang sedang berlangsung.
-          </p>
-        ) : (
-          <div className="space-y-5">
-            {agendaBerlangsung.map((agenda) => (
-              <div
-                key={agenda.id}
-                className="rounded-xl border border-slate-100 p-4 dark:border-slate-800"
-              >
-                {/* HEADER AGENDA */}
-                <div className="flex items-center justify-between gap-4 mb-3">
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-sm truncate">
-                      {agenda.judul}
-                    </h3>
-
-                    <p className="text-xs text-slate-500">
-                      {formatTanggal(agenda.tanggalMulai)}
-                    </p>
-                  </div>
-
-                  <Link
-                    href={`/dashboard/presensi/${agenda.id}`}
-                    className="text-xs font-semibold text-primary dark:text-accent whitespace-nowrap"
-                  >
-                    Lihat presensi →
-                  </Link>
-                </div>
-
-                {/* FOTO PRESENSI */}
-                {agenda.presensiFoto.length === 0 ? (
-                  <p className="text-sm text-slate-400">
-                    Belum ada foto presensi yang diunggah.
-                  </p>
-                ) : (
-                  <ul className="space-y-2">
-                    {agenda.presensiFoto.map((foto) => (
-                      <li
-                        key={foto.id}
-                        className="flex items-center justify-between gap-3 text-sm border-t border-slate-100 pt-2 dark:border-slate-800"
-                      >
-                        <span className="font-medium">
-                          {foto.diunggahOleh?.name ||
-                            "Pengguna tidak diketahui"}
-                        </span>
-
-                        <span className="text-xs text-slate-400 whitespace-nowrap">
-                          {foto.createdAt.toLocaleString(
-                            "id-ID",
-                            {
-                              day: "2-digit",
-                              month: "short",
-                              year: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            }
-                          )}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
       </div>
+
     </div>
   );
 }
