@@ -53,6 +53,10 @@ model Pengurus {
   id           String   @id @default(cuid())
   userId       String?  @unique
   nama         String
+  nim          String?
+  prodi        String?
+  alamat       String?
+  tanggalLahir DateTime?
   jabatan      String
   kodeJabatan  String   @default("KADIV")
   kelompok     String   @default("Lainnya")
@@ -177,12 +181,14 @@ model Pendaftaran {
   noHp              String
   prodi             String
   angkatan          String
+  alamat            String
+  tanggalLahir      DateTime
   motivasi          String
   divisiPilihan     String?
   status            String    @default("PENDING")
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @default(now()) @updatedAt
-  tahap             String    @default("PRADIKSAR_1")
+  tahap             String    @default("PRADIKSAR")
   tanggalDiksar     DateTime?
   tanggalLulus      DateTime?
   tanggalPradiksar1 DateTime?
