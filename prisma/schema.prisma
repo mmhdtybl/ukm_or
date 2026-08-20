@@ -37,6 +37,8 @@ model Anggota {
   prodi          String
   angkatan       String
   noHp           String?
+  alamat         String?
+  tanggalLahir   DateTime?
   foto           String?
   divisi         String?
   status         String           @default("Aktif")
