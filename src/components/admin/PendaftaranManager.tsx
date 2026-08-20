@@ -195,6 +195,8 @@ export default function PendaftaranManager({
               <th>Nama</th>
               <th>NIM</th>
               <th>WhatsApp</th>
+              <th>Alamat</th>
+              <th>Tgl. Lahir</th>
               <th>Tahap</th>
               <th>Status</th>
               <th>Tanggal</th>
@@ -218,6 +220,10 @@ export default function PendaftaranManager({
                       {p.nama}
                     </button>
                   </td>
+
+                  <td className="max-w-48 whitespace-normal">{p.alamat || "-"}</td>
+
+                  <td>{p.tanggalLahir ? new Date(p.tanggalLahir).toLocaleDateString("id-ID") : "-"}</td>
 
                   {/* NIM */}
                   <td>{p.nim}</td>
@@ -317,7 +323,7 @@ export default function PendaftaranManager({
             {filtered.length === 0 && (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={9}
                   className="text-center text-slate-400 py-6"
                 >
                   Tidak ada data pendaftaran.

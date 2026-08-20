@@ -34,7 +34,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     if (existing.userId && nim !== existing.nim) await tx.user.update({ where: { id: existing.userId }, data: { nim } });
     return tx.anggota.update({
       where: { id: params.id },
-      data: { nama: body.nama, nim, prodi: body.prodi, angkatan: body.angkatan, noHp: body.noHp, divisi: body.divisi, status: body.status, periode: body.periode },
+      data: { nama: body.nama, nim, prodi: body.prodi, angkatan: body.angkatan, noHp: body.noHp || null, alamat: body.alamat || null, tanggalLahir: body.tanggalLahir ? new Date(body.tanggalLahir) : null, divisi: body.divisi, status: body.status, periode: body.periode },
     });
   });
   return NextResponse.json(item);

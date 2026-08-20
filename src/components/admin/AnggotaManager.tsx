@@ -7,7 +7,7 @@ import { FiEdit2, FiKey, FiPlus } from "react-icons/fi";
 
 const DIVISI_OPTIONS = ["Voli", "Futsal", "Bulutangkis", "E-Sport", "Taekwondo", "Basket"];
 
-const emptyForm = { id: "", nama: "", nim: "", email: "", prodi: "", angkatan: "", noHp: "", divisi: "", periode: "2025/2026", status: "Aktif" };
+const emptyForm = { id: "", nama: "", nim: "", email: "", prodi: "", angkatan: "", noHp: "", alamat: "", tanggalLahir: "", divisi: "", periode: "2025/2026", status: "Aktif" };
 
 export default function AnggotaManager({
   initialData,
@@ -59,6 +59,8 @@ export default function AnggotaManager({
       prodi: anggota.prodi,
       angkatan: anggota.angkatan,
       noHp: anggota.noHp || "",
+      alamat: anggota.alamat || "",
+      tanggalLahir: anggota.tanggalLahir ? new Date(anggota.tanggalLahir).toISOString().slice(0, 10) : "",
       divisi: divisiLock || anggota.divisi || "",
       periode: anggota.periode || "",
       status: anggota.status,
@@ -136,6 +138,8 @@ export default function AnggotaManager({
           <div><label className="label">Prodi</label><input required className="input" value={form.prodi} onChange={(e) => setForm({ ...form, prodi: e.target.value })} /></div>
           <div><label className="label">Angkatan</label><input required className="input" value={form.angkatan} onChange={(e) => setForm({ ...form, angkatan: e.target.value })} /></div>
           <div><label className="label">No. HP</label><input className="input" value={form.noHp} onChange={(e) => setForm({ ...form, noHp: e.target.value })} /></div>
+          <div><label className="label">Tanggal Lahir</label><input type="date" className="input" value={form.tanggalLahir} onChange={(e) => setForm({ ...form, tanggalLahir: e.target.value })} /></div>
+          <div className="sm:col-span-2"><label className="label">Alamat</label><textarea rows={2} className="input" value={form.alamat} onChange={(e) => setForm({ ...form, alamat: e.target.value })} /></div>
           <div>
             <label className="label">Divisi</label>
             {divisiLock ? (
@@ -162,11 +166,11 @@ export default function AnggotaManager({
 
       <div className="card overflow-x-auto">
         <table className="table-admin">
-          <thead><tr><th>Nama</th><th>NIM</th><th>Prodi</th><th>Divisi</th><th>Status</th><th>Akun</th>{!readOnly && <th>Aksi</th>}</tr></thead>
+          <thead><tr><th>Nama</th><th>NIM</th><th>Prodi</th><th>Alamat</th><th>Tgl. Lahir</th><th>Divisi</th><th>Status</th><th>Akun</th>{!readOnly && <th>Aksi</th>}</tr></thead>
           <tbody>
             {filtered.map((a) => (
               <tr key={a.id}>
-                <td>{a.nama}</td><td>{a.nim}</td><td>{a.prodi}</td><td>{a.divisi || "-"}</td>
+                <td>{a.nama}</td><td>{a.nim}</td><td>{a.prodi}</td><td className="max-w-48 whitespace-normal">{a.alamat || "-"}</td><td>{a.tanggalLahir ? new Date(a.tanggalLahir).toLocaleDateString("id-ID") : "-"}</td><td>{a.divisi || "-"}</td>
                 <td>
                   {readOnly ? (
                     <span className="badge bg-slate-100 text-slate-600">{a.status}</span>
@@ -201,7 +205,7 @@ export default function AnggotaManager({
                 {!readOnly && <td className="flex gap-2"><button onClick={() => mulaiEdit(a)} className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600"><FiEdit2 size={13} /> Edit</button><DataTableActions deleteUrl={`/api/anggota/${a.id}`} /></td>}
               </tr>
             ))}
-            {filtered.length === 0 && <tr><td colSpan={readOnly ? 6 : 7} className="text-center text-slate-400 py-6">Tidak ada data anggota.</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan={readOnly ? 8 : 9} className="text-center text-slate-400 py-6">Tidak ada data anggota.</td></tr>}
           </tbody>
         </table>
       </div>

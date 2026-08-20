@@ -49,6 +49,8 @@ export async function POST(req: NextRequest) {
         prodi: body.prodi,
         angkatan: body.angkatan,
         noHp: body.noHp || null,
+        alamat: body.alamat || null,
+        tanggalLahir: body.tanggalLahir ? new Date(body.tanggalLahir) : null,
         divisi: body.divisi || null,
         status: body.status || "Aktif",
         periode: body.periode || null,
