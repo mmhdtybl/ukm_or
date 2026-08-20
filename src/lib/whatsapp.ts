@@ -110,7 +110,7 @@ export function pesanPendaftaranDikirim(
     "Terima kasih telah mendaftar di UKM Olahraga Unimma.",
     "Pendaftaranmu sudah kami terima dan akan ditinjau oleh tim.",
     link
-      ? `Informasi Pradiksar 1 dan Pradiksar 2 silahkan gabung grup WhatsApp:\n${link}`
+      ? `Informasi Pradiksar 1 dan Pradiksar 2 silakan bergabung ke grup WhatsApp:\n${link}`
       : "",
   ]
     .filter(Boolean)
@@ -119,7 +119,7 @@ export function pesanPendaftaranDikirim(
 
 export function pesanLolosDiksar(link?: string) {
   return [
-    "Selamat Anda lolos ke tahap selanjutnya yaitu Pendidikan Dasar.",
+    "Selamat, Anda lolos ke tahap Pendidikan Dasar (Diksar).",
     link ? `Masuk grup WhatsApp:\n${link}` : "",
   ]
     .filter(Boolean)
@@ -134,8 +134,7 @@ export function pesanHasilPendaftaran(
   link?: string
 ) {
   const labelTahap: Record<string, string> = {
-    PRADIKSAR_1: "Pradiksar 1",
-    PRADIKSAR_2: "Pradiksar 2",
+    PRADIKSAR: "Pradiksar 1 & 2",
     DIKSAR: "Diksar",
     SELESAI: "seluruh tahapan",
   };
@@ -161,7 +160,7 @@ export function pesanHasilPendaftaran(
 
   const pembuka =
     tahapBerikutnya === "SELESAI"
-      ? `Selamat! Kamu dinyatakan lulus seluruh tahapan seleksi ${namaUKM}.`
+      ? `Selamat! Kamu telah lulus seluruh tahapan seleksi ${namaUKM} dan resmi menjadi bagian dari keluarga UKM Olahraga Unimma.`
       : `Selamat! Kamu lulus ${tahap} dan dapat melanjutkan ke ${berikutnya}.`;
 
   return [

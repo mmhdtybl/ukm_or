@@ -29,6 +29,8 @@ export default function PendaftaranForm() {
       noHp: String(formData.get("noHp") || "").trim(),
       prodi: String(formData.get("prodi") || "").trim(),
       angkatan: String(formData.get("angkatan") || "").trim(),
+      alamat: String(formData.get("alamat") || "").trim(),
+      tanggalLahir: String(formData.get("tanggalLahir") || "").trim(),
       divisiPilihan:
         String(formData.get("divisiPilihan") || "").trim(),
       motivasi:
@@ -103,7 +105,7 @@ export default function PendaftaranForm() {
 
         <p className="text-slate-500 text-sm">
           Data Anda telah berhasil dikirim dan masuk
-          ke tahap <b>Pradiksar 1</b>.
+          ke tahap <b>Pradiksar 1 dan Pradiksar 2</b>.
         </p>
 
         <p className="text-slate-500 text-sm mt-2">
@@ -151,6 +153,16 @@ export default function PendaftaranForm() {
             className="input"
           />
         </div>
+      </div>
+
+      <div>
+        <label className="label">Alamat</label>
+        <textarea name="alamat" required rows={3} className="input" placeholder="Alamat lengkap sesuai domisili" />
+      </div>
+
+      <div>
+        <label className="label">Tanggal Lahir</label>
+        <input name="tanggalLahir" type="date" required className="input" />
       </div>
 
       <div>

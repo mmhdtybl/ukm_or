@@ -10,7 +10,7 @@ export default function PendaftaranPage() {
         <h1 className="section-title mb-3">Formulir Pendaftaran Anggota</h1>
         <p className="text-slate-500 dark:text-slate-400 mb-8">
           Lengkapi data di bawah ini. Formulir ini <b>hanya untuk mendaftar</b> — belum ada akun login yang dibuat.
-          Tim kami akan meninjau pendaftaranmu; informasi hasil seleksi dan <b>link grup WhatsApp</b> akan dikirim ke nomor WhatsApp yang kamu daftarkan.
+          Setelah mendaftar, kamu langsung masuk tahap <b>Pradiksar 1 dan Pradiksar 2</b>. Link grup WhatsApp Pradiksar dikirim saat pendaftaran, lalu link Diksar dikirim setelah kamu lolos Pradiksar.
         </p>
         <div className="card">
           <PendaftaranForm />

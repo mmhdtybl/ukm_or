@@ -32,6 +32,10 @@ export async function POST(req: NextRequest) {
       data: {
         userId: user?.id,
         nama: body.nama,
+        nim: body.nim || null,
+        prodi: body.prodi || null,
+        alamat: body.alamat || null,
+        tanggalLahir: body.tanggalLahir ? new Date(body.tanggalLahir) : null,
         jabatan: body.jabatan,
         kodeJabatan: body.kodeJabatan || "KADIV",
         kelompok: body.kelompok || "Lainnya",

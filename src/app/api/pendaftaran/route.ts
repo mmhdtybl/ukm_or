@@ -9,6 +9,8 @@ const schema = z.object({
   noHp: z.string().min(8),
   prodi: z.string().min(2),
   angkatan: z.string().min(2),
+  alamat: z.string().min(5),
+  tanggalLahir: z.coerce.date(),
   motivasi: z.string().min(5),
   divisiPilihan: z.string().optional(),
 });
@@ -58,23 +60,28 @@ export async function POST(req: NextRequest) {
 
     const pendaftaran =
       await prisma.pendaftaran.create({
-        data: {
-          nama: data.nama,
-          nim: data.nim,
-          noHp: data.noHp,
-          prodi: data.prodi,
-          angkatan: data.angkatan,
-          motivasi: data.motivasi,
-          divisiPilihan: data.divisiPilihan,
-          tahap: "PRADIKSAR_1",
-          status: "PENDING",
-        },
-      });
+  data: {
+    nama: data.nama,
+    nim: data.nim,
+    noHp: data.noHp,
+    prodi: data.prodi,
+    angkatan: data.angkatan,
+    alamat: data.alamat,
+    tanggalLahir: new Date(data.tanggalLahir),
+    motivasi: data.motivasi,
+    divisiPilihan: data.divisiPilihan,
+    tahap: "PRADIKSAR_1",
+    status: "PENDING",
+  },
+});
 
-    const [profil, linkPradiksar1] = await Promise.all([
+    const [profil, linkPradiksar] = await Promise.all([
       prisma.profilUKM.findFirst(),
-      prisma.linkWhatsApp.findUnique({
-        where: { tahap: "PRADIKSAR_1" },
+      // Gunakan juga key lama agar link yang sudah dibuat sebelum migrasi
+      // tetap terkirim saat pendaftar baru mengisi formulir.
+      prisma.linkWhatsApp.findFirst({
+        where: { tahap: { in: ["PRADIKSAR", "PRADIKSAR_1"] } },
+        orderBy: { tahap: "asc" },
       }),
     ]);
 
@@ -87,7 +94,7 @@ export async function POST(req: NextRequest) {
       pesanPendaftaranDikirim(
         pendaftaran.nama,
         namaUKM,
-        linkPradiksar1?.link
+        linkPradiksar?.link
       )
     );
 

@@ -7,7 +7,7 @@ import DataTableActions from "./DataTableActions";
 
 const emptyForm = {
   id: "", nama: "", nim: "", email: "", jabatan: "", kodeJabatan: "KETUA_UMUM", kelompok: "Inti",
-  divisi: "", foto: "", periodeMulai: "2025/2026", periodeAkhir: "", urutan: 0, isActive: true,
+  prodi: "", alamat: "", tanggalLahir: "", divisi: "", foto: "", periodeMulai: "2026/2027", periodeAkhir: "", urutan: 0, isActive: true,
 };
 
 // Setiap kode jabatan sudah punya kelompok & label default agar konsisten dengan hak akses di lib/permissions.ts
@@ -20,6 +20,9 @@ const KODE_JABATAN_OPTIONS = [
   { value: "BIDANG_SDM", label: "Bidang SDM", kelompok: "Bidang", jabatanDefault: "Bidang SDM" },
   { value: "BIDANG_INVENTARIS", label: "Bidang Inventaris", kelompok: "Bidang", jabatanDefault: "Bidang Inventaris" },
   { value: "BIDANG_MEDIA", label: "Bidang Media Informasi", kelompok: "Bidang", jabatanDefault: "Bidang Media Informasi" },
+  { value: "BIDANG_SDM_STAFF", label: "Staff Bidang SDM", kelompok: "Bidang", jabatanDefault: "Staff SDM" },
+  { value: "BIDANG_INVENTARIS_STAFF", label: "Staff Bidang Inventaris", kelompok: "Bidang", jabatanDefault: "Staff Inventaris" },
+  { value: "BIDANG_MEDIA_STAFF", label: "Staff Bidang Medifor", kelompok: "Bidang", jabatanDefault: "Staff Medifor" },
   { value: "KADIV", label: "Kepala Divisi (Kadiv)", kelompok: "Kadiv", jabatanDefault: "Kadiv" },
   { value: "STAFF_DIVISI", label: "Staff Divisi Cabang Olahraga", kelompok: "Staff Divisi", jabatanDefault: "Staff Divisi" },
 ];
@@ -77,9 +80,14 @@ export default function PengurusManager({ initialData, isAdmin }: { initialData:
       <form onSubmit={handleSubmit} className="card space-y-4 h-fit">
         <h3 className="font-semibold">{editing ? "Edit Pengurus" : "Tambah Pengurus"}</h3>
         <div><label className="label">Nama</label><input required className="input" value={form.nama} onChange={(e) => setForm({ ...form, nama: e.target.value })} /></div>
+        <div className="grid grid-cols-2 gap-3">
+          <div><label className="label">NPM/NIM</label><input className="input" value={form.nim} onChange={(e) => setForm({ ...form, nim: e.target.value })} /></div>
+          <div><label className="label">Program Studi</label><input className="input" value={form.prodi} onChange={(e) => setForm({ ...form, prodi: e.target.value })} /></div>
+        </div>
+        <div><label className="label">Alamat</label><textarea className="input" rows={2} value={form.alamat} onChange={(e) => setForm({ ...form, alamat: e.target.value })} /></div>
+        <div><label className="label">Tanggal Lahir</label><input type="date" className="input" value={form.tanggalLahir} onChange={(e) => setForm({ ...form, tanggalLahir: e.target.value })} /></div>
         {!editing && (
           <>
-            <div><label className="label">NPM/NIM untuk akun login</label><input className="input" value={form.nim} onChange={(e) => setForm({ ...form, nim: e.target.value })} placeholder="Isi jika membuat akun" /></div>
             <div><label className="label">Email untuk akun login</label><input type="email" className="input" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="nama@email.com" /><p className="mt-1 text-xs text-slate-400">Isi NPM/NIM dan email untuk langsung membuat akun pengurus.</p></div>
           </>
         )}
@@ -122,23 +130,26 @@ export default function PengurusManager({ initialData, isAdmin }: { initialData:
 
       <div className="md:col-span-2 card overflow-x-auto">
         <table className="table-admin">
-          <thead><tr><th>Nama</th><th>Jabatan</th><th>Periode</th><th>Akun</th><th>Aksi</th></tr></thead>
+          <thead><tr><th>Nama</th><th>NPM/NIM</th><th>Jabatan</th><th>Alamat</th><th>Tgl. Lahir</th><th>Periode</th><th>Akun</th><th>Aksi</th></tr></thead>
           <tbody>
             {initialData.map((p) => (
               <tr key={p.id}>
                 <td>{p.nama}</td>
+                <td>{p.nim || "-"}</td>
                 <td>{p.jabatan}{p.divisi ? ` (${p.divisi})` : ""}</td>
+                <td className="max-w-48 whitespace-normal">{p.alamat || "-"}</td>
+                <td>{p.tanggalLahir ? new Date(p.tanggalLahir).toLocaleDateString("id-ID") : "-"}</td>
                 <td>{p.periodeMulai}{p.periodeAkhir ? ` – ${p.periodeAkhir}` : " – sekarang"}</td>
                 <td>
                   {p.userId ? <div className="flex items-center gap-2"><span className="badge bg-green-100 text-green-700">Ada</span>{isAdmin && <button onClick={() => ubahKredensial(p)} className="text-xs font-semibold text-blue-600">Kredensial</button>}</div> : <span className="badge bg-orange-100 text-orange-600">Belum</span>}
                 </td>
                 <td className="flex gap-2">
-                  <button onClick={() => setForm({ ...emptyForm, ...p, divisi: p.divisi || "", periodeAkhir: p.periodeAkhir || "" })} className="text-xs text-blue-600 font-semibold">Edit</button>
+                  <button onClick={() => setForm({ ...emptyForm, ...p, divisi: p.divisi || "", alamat: p.alamat || "", prodi: p.prodi || "", tanggalLahir: p.tanggalLahir ? new Date(p.tanggalLahir).toISOString().slice(0, 10) : "", periodeAkhir: p.periodeAkhir || "" })} className="text-xs text-blue-600 font-semibold">Edit</button>
                   <DataTableActions deleteUrl={`/api/pengurus/${p.id}`} />
                 </td>
               </tr>
             ))}
-            {initialData.length === 0 && <tr><td colSpan={5} className="text-center text-slate-400 py-6">Belum ada data.</td></tr>}
+            {initialData.length === 0 && <tr><td colSpan={8} className="text-center text-slate-400 py-6">Belum ada data.</td></tr>}
           </tbody>
         </table>
       </div>

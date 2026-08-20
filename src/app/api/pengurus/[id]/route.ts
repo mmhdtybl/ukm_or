@@ -15,6 +15,10 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     where: { id: params.id },
     data: {
       nama: body.nama,
+      nim: body.nim || null,
+      prodi: body.prodi || null,
+      alamat: body.alamat || null,
+      tanggalLahir: body.tanggalLahir ? new Date(body.tanggalLahir) : null,
       jabatan: body.jabatan,
       kodeJabatan: body.kodeJabatan || "KADIV",
       kelompok: body.kelompok || "Lainnya",

@@ -11,15 +11,13 @@ const statusColor: Record<string, string> = {
 };
 
 const tahapLabel: Record<string, string> = {
-  PRADIKSAR_1: "Pradiksar 1",
-  PRADIKSAR_2: "Pradiksar 2",
+  PRADIKSAR: "Pradiksar 1 & 2",
   DIKSAR: "Diksar",
   SELESAI: "Selesai",
 };
 
 const tahapColor: Record<string, string> = {
-  PRADIKSAR_1: "bg-blue-100 text-blue-700",
-  PRADIKSAR_2: "bg-purple-100 text-purple-700",
+  PRADIKSAR: "bg-blue-100 text-blue-700",
   DIKSAR: "bg-yellow-100 text-yellow-700",
   SELESAI: "bg-green-100 text-green-700",
 };
@@ -36,9 +34,12 @@ export default function PendaftaranManager({
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [filter, setFilter] = useState("PENDING");
   const [detail, setDetail] = useState<any>(null);
-  const [links, setLinks] = useState<Record<string, string>>(() =>
-    Object.fromEntries(initialLinks.map((item) => [item.tahap, item.link]))
-  );
+  const [links, setLinks] = useState<Record<string, string>>(() => {
+    const savedLinks = Object.fromEntries(initialLinks.map((item) => [item.tahap, item.link]));
+    // Tampilkan link Pradiksar lama di input baru sampai migration diterapkan.
+    if (!savedLinks.PRADIKSAR && savedLinks.PRADIKSAR_1) savedLinks.PRADIKSAR = savedLinks.PRADIKSAR_1;
+    return savedLinks;
+  });
   const [savingLinks, setSavingLinks] = useState(false);
 
   async function saveLinks() {
@@ -79,10 +80,8 @@ export default function PendaftaranManager({
         `Tahap: ${tahapLabel[tahap] || tahap}\n\n` +
         `${
           isLulus
-            ? tahap === "PRADIKSAR_1"
-              ? "Pendaftar akan lanjut ke Pradiksar 2."
-              : tahap === "PRADIKSAR_2"
-              ? "Pendaftar akan lanjut ke Diksar."
+            ? tahap === "PRADIKSAR"
+              ? "Pendaftar akan lanjut ke Diksar dan menerima link grup Diksar."
               : "Pendaftar akan dinyatakan lulus dan menerima link WhatsApp."
             : "Notifikasi tidak lulus akan dikirim melalui WhatsApp."
         }`
@@ -141,8 +140,7 @@ export default function PendaftaranManager({
 
   const filters = [
     { value: "PENDING", label: "Menunggu" },
-    { value: "PRADIKSAR_1", label: "Pradiksar 1" },
-    { value: "PRADIKSAR_2", label: "Pradiksar 2" },
+    { value: "PRADIKSAR", label: "Pradiksar 1 & 2" },
     { value: "DIKSAR", label: "Diksar" },
     { value: "LULUS", label: "Lulus" },
     { value: "TIDAK_LULUS", label: "Tidak Lulus" },
@@ -154,11 +152,11 @@ export default function PendaftaranManager({
       <div className="card mb-6 space-y-4">
         <div>
           <h2 className="font-semibold">Link Grup WhatsApp</h2>
-          <p className="text-sm text-slate-500 mt-1">Link Pradiksar dikirim saat pendaftaran, sedangkan link Diksar dikirim setelah lolos Pradiksar 2.</p>
+          <p className="text-sm text-slate-500 mt-1">Link Pradiksar dikirim saat pendaftaran, sedangkan link Diksar dikirim setelah lolos tahap Pradiksar gabungan.</p>
         </div>
-        {(["PRADIKSAR_1", "DIKSAR"] as const).map((tahap) => (
+        {(["PRADIKSAR", "DIKSAR"] as const).map((tahap) => (
           <div key={tahap}>
-            <label className="label">{tahap === "PRADIKSAR_1" ? "Link WhatsApp Pradiksar 1 & 2" : "Link WhatsApp Diksar"}</label>
+            <label className="label">{tahap === "PRADIKSAR" ? "Link WhatsApp Pradiksar 1 & 2" : "Link WhatsApp Diksar"}</label>
             <input
               type="url"
               className="input"
@@ -206,7 +204,7 @@ export default function PendaftaranManager({
 
           <tbody>
             {filtered.map((p) => {
-              const tahap = p.tahap || "PRADIKSAR_1";
+              const tahap = p.tahap || "PRADIKSAR";
               const isLoading = loadingId === p.id;
 
               return (
@@ -369,7 +367,7 @@ export default function PendaftaranManager({
                   >
                     {tahapLabel[detail.tahap] ||
                       detail.tahap ||
-                      "Pradiksar 1"}
+                      "Pradiksar 1 & 2"}
                   </span>
                 </div>
 
@@ -424,6 +422,16 @@ export default function PendaftaranManager({
                 </div>
 
                 <div className="flex justify-between gap-4">
+                  <b>Alamat</b>
+                  <span className="text-right whitespace-pre-wrap">{detail.alamat || "-"}</span>
+                </div>
+
+                <div className="flex justify-between gap-4">
+                  <b>Tanggal Lahir</b>
+                  <span>{detail.tanggalLahir ? new Date(detail.tanggalLahir).toLocaleDateString("id-ID") : "-"}</span>
+                </div>
+
+                <div className="flex justify-between gap-4">
                   <b>Cabang / Divisi</b>
                   <span>{detail.divisiPilihan || "-"}</span>
                 </div>
@@ -449,17 +457,11 @@ export default function PendaftaranManager({
 
                 {detail.tanggalPradiksar1 && (
                   <p>
-                    <b>Lulus Pradiksar 1:</b>{" "}
+                    <b>Lulus Pradiksar 1 & 2:</b>{" "}
                     {formatTanggalWaktu(detail.tanggalPradiksar1)}
                   </p>
                 )}
 
-                {detail.tanggalPradiksar2 && (
-                  <p>
-                    <b>Lulus Pradiksar 2:</b>{" "}
-                    {formatTanggalWaktu(detail.tanggalPradiksar2)}
-                  </p>
-                )}
 
                 {detail.tanggalDiksar && (
                   <p>
@@ -496,7 +498,7 @@ export default function PendaftaranManager({
                           "LULUS",
                           detail.noHp,
                           detail.nama,
-                          detail.tahap || "PRADIKSAR_1"
+                          detail.tahap || "PRADIKSAR"
                         )
                       }
                       className="btn-primary"
@@ -514,7 +516,7 @@ export default function PendaftaranManager({
                           "TIDAK_LULUS",
                           detail.noHp,
                           detail.nama,
-                          detail.tahap || "PRADIKSAR_1"
+                          detail.tahap || "PRADIKSAR"
                         )
                       }
                       className="btn-outline text-red-500"

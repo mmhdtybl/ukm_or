@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getKapabilitas } from "@/lib/permissions";
 
-const TAHAP_VALID = ["PRADIKSAR_1", "DIKSAR"] as const;
+const TAHAP_VALID = ["PRADIKSAR", "DIKSAR"] as const;
 
 export async function PUT(req: NextRequest) {
   const kap = await getKapabilitas();
@@ -26,7 +26,7 @@ export async function PUT(req: NextRequest) {
           })
         : prisma.linkWhatsApp.deleteMany({ where: { tahap } });
     }),
-    prisma.linkWhatsApp.deleteMany({ where: { tahap: "PRADIKSAR_2" } }),
+    prisma.linkWhatsApp.deleteMany({ where: { tahap: { in: ["PRADIKSAR_1", "PRADIKSAR_2"] } } }),
   ]);
 
   return NextResponse.json({ success: true });
