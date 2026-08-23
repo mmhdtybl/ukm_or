@@ -73,19 +73,9 @@ export default function LoginPage() {
 
         <div className="flex items-center gap-3 my-5 text-xs text-slate-400">
           <div className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
-          <span>atau</span>
+          
           <div className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
         </div>
-
-        <button
-          type="button"
-          disabled={loading}
-          onClick={() => signIn("google", { callbackUrl: "/pendaftaran/google" })}
-          className="btn-outline w-full inline-flex items-center justify-center gap-2 disabled:opacity-60"
-        >
-          <span className="text-lg font-bold text-[#4285F4]">G</span>
-          Daftar atau masuk dengan Google
-        </button>
 
         {info && <p className="mt-4 text-sm text-center text-green-600">{info}</p>}
 
