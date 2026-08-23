@@ -9,11 +9,10 @@ export default async function KelolaPendaftaranPage() {
   const kap = await getKapabilitas();
   if (!kap?.canManageAnggota) redirect("/dashboard");
 
-  const [pendaftaran, linkWhatsApp, pendaftaranGoogle] = await Promise.all([
-    prisma.pendaftaran.findMany({ orderBy: { createdAt: "desc" } }),
-    prisma.linkWhatsApp.findMany(),
-    prisma.pendaftaranGoogle.findMany({ orderBy: { createdAt: "desc" } }),
-  ]);
+  const [pendaftaran, linkWhatsApp] = await Promise.all([
+  prisma.pendaftaran.findMany({ orderBy: { createdAt: "desc" } }),
+  prisma.linkWhatsApp.findMany(),
+]);
   return (
     <div>
       <h1 className="text-2xl font-bold text-primary dark:text-white mb-1">Pendaftaran Anggota Masuk</h1>
@@ -21,10 +20,9 @@ export default async function KelolaPendaftaranPage() {
         Tinjau, terima, atau tolak pendaftaran anggota baru. Jika diterima, pendaftar dikirimi link grup WhatsApp — akun login dibuatkan belakangan secara manual di menu <b>Kelola Anggota</b> setelah bergabung.
       </p>
       <PendaftaranManager
-        initialData={JSON.parse(JSON.stringify(pendaftaran))}
-        initialLinks={JSON.parse(JSON.stringify(linkWhatsApp))}
-        initialGoogleRequests={JSON.parse(JSON.stringify(pendaftaranGoogle))}
-      />
+  initialData={JSON.parse(JSON.stringify(pendaftaran))}
+  initialLinks={JSON.parse(JSON.stringify(linkWhatsApp))}
+/>
     </div>
   );
 }

@@ -2,11 +2,7 @@
 
 import { useState } from "react";
 
-type Status =
-  | "idle"
-  | "loading"
-  | "success"
-  | "error";
+type Status = "idle" | "loading" | "success" | "error";
 
 export default function PendaftaranForm() {
   const [status, setStatus] = useState<Status>("idle");
@@ -31,11 +27,15 @@ export default function PendaftaranForm() {
       prodi: String(formData.get("prodi") || "").trim(),
       angkatan: String(formData.get("angkatan") || "").trim(),
       alamat: String(formData.get("alamat") || "").trim(),
-      tanggalLahir: String(formData.get("tanggalLahir") || "").trim(),
-      divisiPilihan:
-        String(formData.get("divisiPilihan") || "").trim(),
-      motivasi:
-        String(formData.get("motivasi") || "").trim(),
+      tanggalLahir: String(
+        formData.get("tanggalLahir") || ""
+      ).trim(),
+      divisiPilihan: String(
+        formData.get("divisiPilihan") || ""
+      ).trim(),
+      motivasi: String(
+        formData.get("motivasi") || ""
+      ).trim(),
     };
 
     try {
@@ -48,12 +48,6 @@ export default function PendaftaranForm() {
         cache: "no-store",
       });
 
-      /*
-       * Jangan langsung res.json().
-       * Kalau server mengirim HTML/error, kita tetap bisa
-       * membaca response sehingga tidak muncul
-       * "Terjadi kesalahan jaringan" secara palsu.
-       */
       const text = await res.text();
 
       let data: any = {};
@@ -75,7 +69,6 @@ export default function PendaftaranForm() {
           data?.message ||
             `Pendaftaran gagal. HTTP ${res.status}`
         );
-
         setStatus("error");
         return;
       }
@@ -86,7 +79,7 @@ export default function PendaftaranForm() {
       console.error("FETCH ERROR:", error);
 
       setErrorMsg(
-        "Tidak dapat terhubung ke server. Pastikan npm run dev masih berjalan."
+        "Tidak dapat terhubung ke server. Pastikan server masih berjalan."
       );
 
       setStatus("error");
@@ -110,8 +103,9 @@ export default function PendaftaranForm() {
         </p>
 
         <p className="text-slate-500 text-sm mt-2">
-          Kami akan mengirim informasi selanjutnya melalui
-          WhatsApp pada nomor yang Anda daftarkan.
+          Kami akan mengirim informasi selanjutnya
+          melalui WhatsApp dan email yang Anda
+          daftarkan.
         </p>
 
         <button
@@ -130,6 +124,7 @@ export default function PendaftaranForm() {
       onSubmit={handleSubmit}
       className="space-y-4"
     >
+      {/* NAMA + NIM */}
       <div className="grid sm:grid-cols-2 gap-4">
         <div>
           <label className="label">
@@ -140,51 +135,62 @@ export default function PendaftaranForm() {
             name="nama"
             required
             className="input"
+            placeholder="Nama lengkap"
           />
         </div>
 
         <div>
           <label className="label">
-            NPM
+            NPM / NIM
           </label>
 
           <input
             name="nim"
             required
             className="input"
+            placeholder="Contoh: 22010001"
           />
         </div>
       </div>
 
+      {/* EMAIL */}
       <div>
-        <label className="label">Email</label>
-        <input name="email" type="email" required className="input" placeholder="nama@email.com" />
+        <label className="label">
+          Email
+        </label>
+
+        <input
+          name="email"
+          type="email"
+          required
+          autoComplete="email"
+          className="input"
+          placeholder="nama@email.com"
+        />
+
+        <p className="text-xs text-slate-500 mt-1">
+          Gunakan email yang aktif karena dapat digunakan
+          untuk menerima informasi pendaftaran.
+        </p>
       </div>
 
+      {/* WHATSAPP */}
       <div>
-        <label className="label">Alamat</label>
-        <textarea name="alamat" required rows={3} className="input" placeholder="Alamat lengkap sesuai domisili" />
+        <label className="label">
+          No. HP / WhatsApp
+        </label>
+
+        <input
+          name="noHp"
+          type="tel"
+          required
+          autoComplete="tel"
+          className="input"
+          placeholder="08xxxxxxxxxx"
+        />
       </div>
 
-      <div>
-        <label className="label">Tanggal Lahir</label>
-        <input name="tanggalLahir" type="date" required className="input" />
-      </div>
-
-      <div>
-        <div>
-          <label className="label">
-            No. HP / WhatsApp
-          </label>
-
-          <input
-            name="noHp"
-            required
-            className="input"
-          />
-        </div>
-      </div>
-
+      {/* PROGRAM STUDI + ANGKATAN */}
       <div className="grid sm:grid-cols-2 gap-4">
         <div>
           <label className="label">
@@ -195,6 +201,7 @@ export default function PendaftaranForm() {
             name="prodi"
             required
             className="input"
+            placeholder="Program studi"
           />
         </div>
 
@@ -212,6 +219,36 @@ export default function PendaftaranForm() {
         </div>
       </div>
 
+      {/* ALAMAT */}
+      <div>
+        <label className="label">
+          Alamat
+        </label>
+
+        <textarea
+          name="alamat"
+          required
+          rows={3}
+          className="input"
+          placeholder="Alamat lengkap sesuai domisili"
+        />
+      </div>
+
+      {/* TANGGAL LAHIR */}
+      <div>
+        <label className="label">
+          Tanggal Lahir
+        </label>
+
+        <input
+          name="tanggalLahir"
+          type="date"
+          required
+          className="input"
+        />
+      </div>
+
+      {/* CABANG OLAHRAGA */}
       <div>
         <label className="label">
           Cabang Olahraga yang Diminati
@@ -226,21 +263,33 @@ export default function PendaftaranForm() {
             Pilih cabang olahraga
           </option>
 
-          <option value="Voli">Voli</option>
-          <option value="Futsal">Futsal</option>
+          <option value="Voli">
+            Voli
+          </option>
+
+          <option value="Futsal">
+            Futsal
+          </option>
+
           <option value="Bulutangkis">
             Bulutangkis
           </option>
+
           <option value="E-Sport">
             E-Sport
           </option>
+
           <option value="Taekwondo">
             Taekwondo
           </option>
-          <option value="Basket">Basket</option>
+
+          <option value="Basket">
+            Basket
+          </option>
         </select>
       </div>
 
+      {/* MOTIVASI */}
       <div>
         <label className="label">
           Motivasi Bergabung
@@ -256,6 +305,7 @@ export default function PendaftaranForm() {
         />
       </div>
 
+      {/* ERROR */}
       {status === "error" && (
         <div className="rounded-lg border border-red-300 bg-red-50 p-3">
           <p className="text-red-600 text-sm font-medium">
@@ -264,6 +314,7 @@ export default function PendaftaranForm() {
         </div>
       )}
 
+      {/* SUBMIT */}
       <button
         type="submit"
         disabled={status === "loading"}
