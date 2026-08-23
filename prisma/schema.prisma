@@ -56,6 +56,8 @@ model Pengurus {
   userId       String?   @unique
   nama         String
   nim          String?
+  email        String?
+  noHp         String?
   prodi        String?
   alamat       String?
   tanggalLahir DateTime?
