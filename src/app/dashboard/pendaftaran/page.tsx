@@ -9,9 +9,10 @@ export default async function KelolaPendaftaranPage() {
   const kap = await getKapabilitas();
   if (!kap?.canManageAnggota) redirect("/dashboard");
 
-  const [pendaftaran, linkWhatsApp] = await Promise.all([
+  const [pendaftaran, linkWhatsApp, pendaftaranGoogle] = await Promise.all([
     prisma.pendaftaran.findMany({ orderBy: { createdAt: "desc" } }),
     prisma.linkWhatsApp.findMany(),
+    prisma.pendaftaranGoogle.findMany({ orderBy: { createdAt: "desc" } }),
   ]);
   return (
     <div>
@@ -22,6 +23,7 @@ export default async function KelolaPendaftaranPage() {
       <PendaftaranManager
         initialData={JSON.parse(JSON.stringify(pendaftaran))}
         initialLinks={JSON.parse(JSON.stringify(linkWhatsApp))}
+        initialGoogleRequests={JSON.parse(JSON.stringify(pendaftaranGoogle))}
       />
     </div>
   );

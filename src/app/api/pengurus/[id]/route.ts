@@ -17,6 +17,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       nama: body.nama,
       nim: body.nim || null,
       prodi: body.prodi || null,
+      noHp: body.noHp || null,
       alamat: body.alamat || null,
       tanggalLahir: body.tanggalLahir ? new Date(body.tanggalLahir) : null,
       jabatan: body.jabatan,
@@ -28,6 +29,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       periodeAkhir: body.periodeAkhir || null,
       urutan: Number(body.urutan || 0),
       isActive: body.isActive ?? true,
+      status: body.status || "Aktif",
     },
   });
   return NextResponse.json(item);

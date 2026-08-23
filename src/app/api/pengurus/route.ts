@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
         nama: body.nama,
         nim: body.nim || null,
         prodi: body.prodi || null,
+        noHp: body.noHp || null,
         alamat: body.alamat || null,
         tanggalLahir: body.tanggalLahir ? new Date(body.tanggalLahir) : null,
         jabatan: body.jabatan,
@@ -45,6 +46,7 @@ export async function POST(req: NextRequest) {
         periodeAkhir: body.periodeAkhir || null,
         urutan: Number(body.urutan || 0),
         isActive: body.isActive ?? true,
+        status: body.status || "Aktif",
       },
     });
   });

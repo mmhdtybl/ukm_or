@@ -26,6 +26,7 @@ export default function PendaftaranForm() {
     const payload = {
       nama: String(formData.get("nama") || "").trim(),
       nim: String(formData.get("nim") || "").trim(),
+      email: String(formData.get("email") || "").trim(),
       noHp: String(formData.get("noHp") || "").trim(),
       prodi: String(formData.get("prodi") || "").trim(),
       angkatan: String(formData.get("angkatan") || "").trim(),
@@ -153,6 +154,11 @@ export default function PendaftaranForm() {
             className="input"
           />
         </div>
+      </div>
+
+      <div>
+        <label className="label">Email</label>
+        <input name="email" type="email" required className="input" placeholder="nama@email.com" />
       </div>
 
       <div>

@@ -100,8 +100,8 @@ async function main() {
       misi:
         "1. Membina dan mengembangkan potensi mahasiswa di berbagai cabang olahraga.\n2. Menyelenggarakan latihan rutin, kompetisi, dan event olahraga kampus.\n3. Membangun semangat sportivitas, kerja sama tim, dan kedisiplinan.\n4. Mengharumkan nama almamater melalui prestasi di bidang olahraga.",
       sejarah: "UKM Olahraga Unimma didirikan sebagai wadah bagi mahasiswa yang memiliki minat dan bakat di bidang olahraga untuk berkembang dan berprestasi.",
-      alamat: "Gedung Kemahasiswaan, Universitas Muhammadiyah Magelang",
-      email: "ukmolahraga@unimma.ac.id",
+      alamat: "Sekretariat UKM Olahraga Unimma,Kampus 2 Universitas Muhammadiyah Magelang, Jl. Mayjend Bambang Soegeng No. 1, Magelang, Jawa Tengah, Indonesia",
+      email: "ukmolahraga01@gmail.com",
       telepon: "0812-3456-7890",
       waGroupLink: "https://chat.whatsapp.com/contoh-link-grup-ukm",
     },

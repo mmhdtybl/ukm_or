@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -10,6 +10,18 @@ export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
+
+  useEffect(() => {
+    const googleStatus = new URLSearchParams(window.location.search).get("google");
+    if (googleStatus === "registered") {
+      setInfo("Permintaan pendaftaran Google telah dikirim. Admin akan meninjau data Anda untuk pembuatan akun.");
+    } else if (googleStatus === "error") {
+      setError("Google tidak mengirimkan alamat email. Silakan gunakan akun Google lain.");
+    } else if (googleStatus === "inactive") {
+      setError("Akun Anda sedang tidak aktif. Hubungi admin UKM.");
+    }
+  }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -59,6 +71,24 @@ export default function LoginPage() {
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}
         </form>
 
+        <div className="flex items-center gap-3 my-5 text-xs text-slate-400">
+          <div className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
+          <span>atau</span>
+          <div className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
+        </div>
+
+        <button
+          type="button"
+          disabled={loading}
+          onClick={() => signIn("google", { callbackUrl: "/pendaftaran/google" })}
+          className="btn-outline w-full inline-flex items-center justify-center gap-2 disabled:opacity-60"
+        >
+          <span className="text-lg font-bold text-[#4285F4]">G</span>
+          Daftar atau masuk dengan Google
+        </button>
+
+        {info && <p className="mt-4 text-sm text-center text-green-600">{info}</p>}
+
         <p className="text-center text-sm text-slate-500 mt-6">
           Belum punya akun anggota?{" "}
           <Link href="/pendaftaran" className="text-primary dark:text-accent font-semibold">
@@ -66,7 +96,7 @@ export default function LoginPage() {
           </Link>
         </p>
         <p className="text-center text-xs text-slate-400 mt-2">
-          Email hanya digunakan saat pendaftaran akun, bukan untuk login.
+          Pendaftaran lewat Google meminta NPM/NIM setelah memilih akun Google, lalu dikirim ke admin.
         </p>
       </div>
     </div>

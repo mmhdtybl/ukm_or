@@ -25,9 +25,11 @@ const tahapColor: Record<string, string> = {
 export default function PendaftaranManager({
   initialData,
   initialLinks,
+  initialGoogleRequests,
 }: {
   initialData: any[];
   initialLinks: any[];
+  initialGoogleRequests: any[];
 }) {
   const router = useRouter();
 
@@ -41,6 +43,22 @@ export default function PendaftaranManager({
     return savedLinks;
   });
   const [savingLinks, setSavingLinks] = useState(false);
+  const [googleRequests, setGoogleRequests] = useState(initialGoogleRequests);
+  const [googleLoadingId, setGoogleLoadingId] = useState<string | null>(null);
+
+  async function markGoogleRequestProcessed(id: string) {
+    setGoogleLoadingId(id);
+    try {
+      const response = await fetch(`/api/pendaftaran/google/${id}`, { method: "PATCH" });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || "Gagal memperbarui permintaan Google.");
+      setGoogleRequests((items) => items.map((item) => item.id === id ? { ...item, status: "SELESAI" } : item));
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Gagal memperbarui permintaan Google.");
+    } finally {
+      setGoogleLoadingId(null);
+    }
+  }
 
   async function saveLinks() {
     setSavingLinks(true);
@@ -149,6 +167,25 @@ export default function PendaftaranManager({
 
   return (
     <div>
+      <div className="card mb-6 overflow-x-auto">
+        <div className="mb-4">
+          <h2 className="font-semibold">Permintaan Pendaftaran Google</h2>
+          <p className="text-sm text-slate-500 mt-1">Nama dan email dari Google. Buat akun melalui menu Kelola Akun, lalu tandai permintaan ini selesai.</p>
+        </div>
+        <table className="table-admin">
+          <thead><tr><th>Nama</th><th>Email</th><th>Tanggal</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody>
+            {googleRequests.map((request) => <tr key={request.id}>
+              <td className="font-medium">{request.nama}</td>
+              <td>{request.email}</td>
+              <td>{formatTanggalWaktu(request.createdAt)}</td>
+              <td><span className={`badge ${request.status === "PENDING" ? "bg-orange-100 text-orange-600" : "bg-green-100 text-green-700"}`}>{request.status === "PENDING" ? "Menunggu" : "Selesai"}</span></td>
+              <td>{request.status === "PENDING" ? <button disabled={googleLoadingId === request.id} onClick={() => markGoogleRequestProcessed(request.id)} className="text-xs font-semibold text-green-600 disabled:opacity-50">{googleLoadingId === request.id ? "Menyimpan..." : "Tandai selesai"}</button> : "-"}</td>
+            </tr>)}
+            {googleRequests.length === 0 && <tr><td colSpan={5} className="py-5 text-center text-slate-400">Belum ada permintaan dari Google.</td></tr>}
+          </tbody>
+        </table>
+      </div>
       <div className="card mb-6 space-y-4">
         <div>
           <h2 className="font-semibold">Link Grup WhatsApp</h2>
