@@ -25,21 +25,19 @@ export async function PUT(req: NextRequest) {
   }
 
   // Ambil data dari request
-  const { name, email, avatar, nim, password } = await req.json();
+  const { name, avatar, nim, password } = await req.json();
 
   const nama = typeof name === "string" ? name.trim() : "";
-  const surel =
-    typeof email === "string" ? email.trim().toLowerCase() : "";
   const npm = typeof nim === "string" ? nim.trim() : "";
 
   // Cek role user
   const isAdmin =
     (session.user as { role?: string }).role === "ADMIN";
 
-  // Validasi nama dan email
-  if (!nama || !surel) {
+  // Validasi nama
+  if (!nama) {
     return NextResponse.json(
-      { message: "Nama dan email wajib diisi" },
+      { message: "Nama wajib diisi" },
       { status: 400 }
     );
   }
@@ -79,26 +77,6 @@ export async function PUT(req: NextRequest) {
         { status: 400 }
       );
     }
-  }
-
-  // Cek apakah email sudah digunakan akun lain
-  const emailDipakai = await prisma.user.findFirst({
-    where: {
-      email: surel,
-      NOT: {
-        id: userId,
-      },
-    },
-    select: {
-      id: true,
-    },
-  });
-
-  if (emailDipakai) {
-    return NextResponse.json(
-      { message: "Email sudah digunakan oleh akun lain" },
-      { status: 409 }
-    );
   }
 
   // Admin: cek apakah NIM/NPM sudah digunakan akun lain
@@ -143,7 +121,6 @@ export async function PUT(req: NextRequest) {
 
       data: {
         name: nama,
-        email: surel,
 
         avatar:
           typeof avatar === "string" && avatar
@@ -169,7 +146,6 @@ export async function PUT(req: NextRequest) {
       select: {
         id: true,
         name: true,
-        email: true,
         nim: true,
         avatar: true,
       },

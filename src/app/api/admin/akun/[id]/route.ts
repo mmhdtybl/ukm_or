@@ -10,13 +10,13 @@ async function adminOnly() {
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   if (!await adminOnly()) return NextResponse.json({ message: "Hanya admin yang dapat mengubah akun." }, { status: 403 });
-  const { email, password, nim } = await req.json();
-  if (!email || !nim?.trim()) return NextResponse.json({ message: "NIM dan email wajib diisi." }, { status: 400 });
+  const { password, nim } = await req.json();
+  if (!nim?.trim()) return NextResponse.json({ message: "NIM wajib diisi." }, { status: 400 });
   if (password && password.length < 6) return NextResponse.json({ message: "Password minimal 6 karakter." }, { status: 400 });
-  const duplicate = await prisma.user.findFirst({ where: { OR: [{ email }, { nim: nim.trim() }], NOT: { id: params.id } } });
-  if (duplicate) return NextResponse.json({ message: "NIM atau email telah dipakai akun lain." }, { status: 400 });
+  const duplicate = await prisma.user.findFirst({ where: { nim: nim.trim(), NOT: { id: params.id } } });
+  if (duplicate) return NextResponse.json({ message: "NIM telah dipakai akun lain." }, { status: 400 });
   await prisma.$transaction(async (tx) => {
-    await tx.user.update({ where: { id: params.id }, data: { nim: nim.trim(), email, ...(password ? { password: await bcrypt.hash(password, 10) } : {}) } });
+    await tx.user.update({ where: { id: params.id }, data: { nim: nim.trim(), ...(password ? { password: await bcrypt.hash(password, 10) } : {}) } });
     await tx.anggota.updateMany({ where: { userId: params.id }, data: { nim: nim.trim() } });
   });
   return NextResponse.json({ ok: true });

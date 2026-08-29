@@ -12,7 +12,7 @@ export default async function ProfilSayaPage() {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { name: true, email: true, nim: true, avatar: true, role: true },
+    select: { name: true, nim: true, avatar: true, role: true },
   });
   if (!user) notFound();
 
@@ -21,7 +21,7 @@ export default async function ProfilSayaPage() {
       <h1 className="text-2xl font-bold text-primary dark:text-white">Profil Saya</h1>
       <p className="mb-6 mt-1 text-sm text-slate-500 dark:text-slate-400">Perbarui informasi akun dan foto profil Anda.</p>
       <ProfilSayaForm
-        initialData={{ name: user.name, email: user.email, nim: user.nim, avatar: user.avatar }}
+        initialData={{ name: user.name, nim: user.nim, avatar: user.avatar }}
         isAdmin={user.role === "ADMIN"}
       />
     </div>

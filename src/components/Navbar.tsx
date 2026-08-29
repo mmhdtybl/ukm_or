@@ -208,22 +208,6 @@ export default function Navbar() {
                   href="/login"
                   className="
                     rounded-xl
-                    px-4 py-2.5
-                    text-sm font-semibold
-                    text-slate-700
-                    transition-all duration-300
-                    hover:bg-slate-100
-                    dark:text-slate-200
-                    dark:hover:bg-white/10
-                  "
-                >
-                  Masuk
-                </Link>
-
-                <Link
-                  href="/pendaftaran"
-                  className="
-                    rounded-xl
                     bg-primary
                     px-4 py-2.5
                     text-sm font-semibold
@@ -235,7 +219,7 @@ export default function Navbar() {
                     hover:shadow-lg
                   "
                 >
-                  Daftar
+                  Masuk
                 </Link>
 
               </div>
@@ -392,24 +376,6 @@ export default function Navbar() {
                       onClick={() => setIsOpen(false)}
                       className="
                         rounded-xl
-                        border border-slate-200
-                        bg-white
-                        px-4 py-2.5
-                        text-xs font-bold
-                        text-slate-700
-                        dark:border-slate-600
-                        dark:bg-slate-700
-                        dark:text-white
-                      "
-                    >
-                      Masuk
-                    </Link>
-
-                    <Link
-                      href="/pendaftaran"
-                      onClick={() => setIsOpen(false)}
-                      className="
-                        rounded-xl
                         bg-primary
                         px-4 py-2.5
                         text-xs font-bold
@@ -417,7 +383,7 @@ export default function Navbar() {
                         shadow-sm
                       "
                     >
-                      Daftar
+                      Masuk
                     </Link>
 
                   </div>

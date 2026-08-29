@@ -1,6 +1,5 @@
 import { NextAuthOptions, getServerSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
@@ -32,42 +31,13 @@ export const authOptions: NextAuthOptions = {
         return {
           id: user.id,
           name: user.name,
-          email: user.email,
           role,
           image: user.avatar || undefined,
         };
       },
     }),
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-    }),
   ],
   callbacks: {
-    async signIn({ user, account }) {
-      if (account?.provider !== "google") return true;
-
-      const email = user.email?.trim().toLowerCase();
-      const nama = user.name?.trim() || "Pendaftar Google";
-
-      if (!email) return "/login?google=error";
-
-      const existingUser = await prisma.user.findUnique({ where: { email } });
-      if (existingUser?.isActive) {
-        // Gunakan identitas akun lokal agar role pada JWT tetap benar.
-        user.id = existingUser.id;
-        user.name = existingUser.name;
-        user.email = existingUser.email;
-        (user as any).role = existingUser.role;
-        return true;
-      }
-
-      if (existingUser) return "/login?google=inactive";
-
-      // Pengguna baru menyelesaikan NPM pada halaman pendaftaran Google.
-      // Data baru dikirim ke dashboard admin setelah formulir itu dikirim.
-      return true;
-    },
     async jwt({ token, user }) {
       if (user) {
         token.id = (user as any).id;

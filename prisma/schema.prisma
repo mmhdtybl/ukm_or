@@ -12,7 +12,7 @@ model User {
   id               String           @id @default(cuid())
   name             String
   nim              String           @unique
-  email            String           @unique
+  email            String?
   password         String
   role             String           @default("ANGGOTA")
   avatar           String?
@@ -56,7 +56,7 @@ model Pengurus {
   userId       String?   @unique
   nama         String
   nim          String?
-  email        String?
+ 
   noHp         String?
   prodi        String?
   alamat       String?

@@ -3,6 +3,8 @@ node_modules/
 dev.db
 dev.db-journal
 .env
+.env.*
+!.env.example
 
 public/uploads/*
 !public/uploads/.gitkeep

@@ -22,7 +22,6 @@ export default function PendaftaranForm() {
     const payload = {
       nama: String(formData.get("nama") || "").trim(),
       nim: String(formData.get("nim") || "").trim(),
-      email: String(formData.get("email") || "").trim(),
       noHp: String(formData.get("noHp") || "").trim(),
       prodi: String(formData.get("prodi") || "").trim(),
       angkatan: String(formData.get("angkatan") || "").trim(),
@@ -104,8 +103,7 @@ export default function PendaftaranForm() {
 
         <p className="text-slate-500 text-sm mt-2">
           Kami akan mengirim informasi selanjutnya
-          melalui WhatsApp dan email yang Anda
-          daftarkan.
+          melalui WhatsApp yang Anda daftarkan.
         </p>
 
         <button
@@ -151,27 +149,6 @@ export default function PendaftaranForm() {
             placeholder="Contoh: 22010001"
           />
         </div>
-      </div>
-
-      {/* EMAIL */}
-      <div>
-        <label className="label">
-          Email
-        </label>
-
-        <input
-          name="email"
-          type="email"
-          required
-          autoComplete="email"
-          className="input"
-          placeholder="nama@email.com"
-        />
-
-        <p className="text-xs text-slate-500 mt-1">
-          Gunakan email yang aktif karena dapat digunakan
-          untuk menerima informasi pendaftaran.
-        </p>
       </div>
 
       {/* WHATSAPP */}

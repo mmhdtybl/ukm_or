@@ -6,7 +6,6 @@ import { z } from "zod";
 const schema = z.object({
   nama: z.string().min(2),
   nim: z.string().min(3),
-  email: z.string().trim().email(),
   noHp: z.string().min(8),
   prodi: z.string().min(2),
   angkatan: z.string().min(2),
@@ -61,20 +60,19 @@ export async function POST(req: NextRequest) {
 
     const pendaftaran =
       await prisma.pendaftaran.create({
-  data: {
-    nama: data.nama,
-    nim: data.nim,
-    email: data.email,
-    noHp: data.noHp,
-    prodi: data.prodi,
-    angkatan: data.angkatan,
-    alamat: data.alamat,
-    tanggalLahir: new Date(data.tanggalLahir),
-    motivasi: data.motivasi,
-    divisiPilihan: data.divisiPilihan,
-    tahap: "PRADIKSAR",
-    status: "PENDING",
-  },
+    data: {
+      nama: data.nama,
+      nim: data.nim,
+      noHp: data.noHp,
+      prodi: data.prodi,
+      angkatan: data.angkatan,
+      alamat: data.alamat,
+      tanggalLahir: new Date(data.tanggalLahir),
+      motivasi: data.motivasi,
+      divisiPilihan: data.divisiPilihan,
+      tahap: "PRADIKSAR",
+      status: "PENDING",
+    },
 });
 
     const [profil, linkPradiksar] = await Promise.all([

@@ -6,7 +6,7 @@ import { FiSave } from "react-icons/fi";
 import ImageUploader from "@/components/admin/ImageUploader";
 import PasswordInput from "@/components/PasswordInput";
 
-type Profil = { name: string; email: string; nim: string; avatar: string | null };
+type Profil = { name: string; nim: string; avatar: string | null };
 
 export default function ProfilSayaForm({ initialData, isAdmin = false }: { initialData: Profil; isAdmin?: boolean }) {
   const router = useRouter();
@@ -35,7 +35,6 @@ export default function ProfilSayaForm({ initialData, isAdmin = false }: { initi
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: form.name,
-          email: form.email,
           avatar: form.avatar,
           ...(isAdmin ? { nim: form.nim, password } : {}),
         }),
@@ -67,11 +66,6 @@ export default function ProfilSayaForm({ initialData, isAdmin = false }: { initi
       <div>
         <label className="label" htmlFor="profil-name">Nama</label>
         <input id="profil-name" className="input" value={form.name} onChange={(e) => setForm((current) => ({ ...current, name: e.target.value }))} required />
-      </div>
-
-      <div>
-        <label className="label" htmlFor="profil-email">Email</label>
-        <input id="profil-email" type="email" className="input" value={form.email} onChange={(e) => setForm((current) => ({ ...current, email: e.target.value }))} required />
       </div>
 
       <div>

@@ -19,7 +19,6 @@ async function main() {
     create: {
       name: "Administrator",
       nim: "ADMIN001",
-      email: "admin@ukmolahraga.unimma.ac.id",
       password: adminPassword,
       role: "ADMIN",
     },
@@ -31,7 +30,6 @@ async function main() {
     create: {
       name: "Muhammad Rizky",
       nim: "21201001",
-      email: "ketua@ukmolahraga.unimma.ac.id",
       password: pengurusPassword,
       role: "PENGURUS",
     },
@@ -43,7 +41,6 @@ async function main() {
     create: {
       name: "Putri Anggraini",
       nim: "21201004",
-      email: "bendahara@ukmolahraga.unimma.ac.id",
       password: pengurusPassword,
       role: "PENGURUS",
     },
@@ -55,7 +52,6 @@ async function main() {
     create: {
       name: "Bayu Saputra",
       nim: "22201030",
-      email: "kadivvoli@ukmolahraga.unimma.ac.id",
       password: pengurusPassword,
       role: "PENGURUS",
     },
@@ -67,7 +63,6 @@ async function main() {
     create: {
       name: "Siti Aminah",
       nim: "22201050",
-      email: "anggota@ukmolahraga.unimma.ac.id",
       password: anggotaPassword,
       role: "ANGGOTA",
     },

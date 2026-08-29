@@ -18,7 +18,6 @@ const emptyForm = {
   id: "",
   nama: "",
   nim: "",
-  email: "",
   prodi: "",
   angkatan: "",
   noHp: "",
@@ -58,9 +57,17 @@ export default function AnggotaManager({
     password: string;
   } | null>(null);
 
-  const [emailInput, setEmailInput] = useState<Record<string, string>>(
-    {}
-  );
+  const [buatAkunModal, setBuatAkunModal] = useState<{
+    id: string;
+    nim: string;
+  } | null>(null);
+  const [buatAkunPassword, setBuatAkunPassword] = useState("");
+
+  const [editKredensialModal, setEditKredensialModal] = useState<{
+    id: string;
+    nama: string;
+  } | null>(null);
+  const [editKredensialPassword, setEditKredensialPassword] = useState("");
 
   const editing = Boolean(form.id);
 
@@ -124,7 +131,6 @@ export default function AnggotaManager({
       id: anggota.id,
       nama: anggota.nama || "",
       nim: anggota.nim || "",
-      email: anggota.user?.email || "",
       prodi: anggota.prodi || "",
       angkatan: anggota.angkatan || "",
       noHp: anggota.noHp || "",
@@ -182,24 +188,26 @@ export default function AnggotaManager({
   // BUAT AKUN
   // =========================================================
 
-  async function buatAkun(id: string) {
-    const email = emailInput[id];
+  function buatAkun(id: string, nim: string) {
+    setBuatAkunModal({ id, nim });
+    setBuatAkunPassword("");
+  }
 
-    if (!email) {
-      alert(
-        "Masukkan email anggota terlebih dahulu untuk mengirim kredensial."
-      );
+  async function submitBuatAkun() {
+    if (!buatAkunModal) return;
+    if (!buatAkunPassword || buatAkunPassword.length < 6) {
+      alert("Password minimal 6 karakter.");
       return;
     }
 
     try {
-      const res = await fetch(`/api/anggota/${id}/akun`, {
+      const res = await fetch(`/api/anggota/${buatAkunModal.id}/akun`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email,
+          password: buatAkunPassword,
         }),
       });
 
@@ -214,7 +222,8 @@ export default function AnggotaManager({
         nim: data.nim,
         password: data.password,
       });
-
+      setBuatAkunModal(null);
+      setBuatAkunPassword("");
       router.refresh();
     } catch (error) {
       console.error(error);
@@ -228,10 +237,9 @@ export default function AnggotaManager({
 
   async function kelolaAkun(
     id: string,
-    aksi: "ubah" | "hapus",
-    akun?: any
+    aksi: "ubah" | "hapus"
   ) {
-    // HAPUS AKUN
+    // HAPUS AKUN — tetap pakai confirm karena ini destructive action
     if (aksi === "hapus") {
       if (
         !confirm(
@@ -262,45 +270,40 @@ export default function AnggotaManager({
       return;
     }
 
-    // UBAH KREDENSIAL
-    const email = prompt(
-      "Email akun",
-      akun?.email || ""
-    );
+    // UBAH PASSWORD — buka modal
+    const anggotaData = initialData.find((a) => a.id === id);
+    setEditKredensialModal({ id, nama: anggotaData?.nama || "" });
+    setEditKredensialPassword("");
+  }
 
-    if (!email) return;
-
-    const password = prompt(
-      "Password baru (kosongkan untuk tidak mengubah password)",
-      ""
-    );
-
-    if (password === null) return;
+  async function submitEditKredensial() {
+    if (!editKredensialModal) return;
+    if (!editKredensialPassword || editKredensialPassword.length < 6) {
+      alert("Password minimal 6 karakter.");
+      return;
+    }
 
     try {
-      const res = await fetch(`/api/anggota/${id}/akun`, {
+      const res = await fetch(`/api/anggota/${editKredensialModal.id}/akun`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email,
-          password,
+          password: editKredensialPassword,
         }),
       });
 
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        alert(
-          data.message ||
-            "Gagal memperbarui akun."
-        );
+        alert(data.message || "Gagal memperbarui akun.");
         return;
       }
 
-      alert("Kredensial akun berhasil diperbarui.");
-
+      alert("Password akun berhasil diperbarui.");
+      setEditKredensialModal(null);
+      setEditKredensialPassword("");
       router.refresh();
     } catch (error) {
       console.error(error);
@@ -327,12 +330,6 @@ export default function AnggotaManager({
         .includes(keyword) ||
       (a.prodi || "")
         .toLowerCase()
-        .includes(keyword) ||
-      (a.email || "")
-        .toLowerCase()
-        .includes(keyword) ||
-      (a.user?.email || "")
-        .toLowerCase()
         .includes(keyword)
     );
   });
@@ -351,7 +348,7 @@ export default function AnggotaManager({
       <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:items-center sm:justify-between">
 
         <input
-          placeholder="Cari nama/NIM/No HP/email..."
+          placeholder="Cari nama/NIM/No HP/Prodi..."
           className="input max-w-sm"
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -376,333 +373,197 @@ export default function AnggotaManager({
       </div>
 
       {/* =====================================================
-          FORM
+          MODAL TAMBAH / EDIT ANGGOTA
       ===================================================== */}
 
       {showForm && !readOnly && (
-        <form
-          onSubmit={handleSubmit}
-          className="card grid sm:grid-cols-2 gap-4 mb-6"
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4 backdrop-blur-sm"
+          onClick={() => {
+            setForm({ ...emptyForm, divisi: divisiLock || "" });
+            setShowForm(false);
+          }}
         >
+          <div
+            className="card w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <h2 className="font-semibold text-lg">
+                {editing ? "Edit Anggota" : "Tambah Anggota"}
+              </h2>
 
-          <h2 className="sm:col-span-2 font-semibold">
-            {editing
-              ? "Edit Anggota"
-              : "Tambah Anggota"}
-          </h2>
+              {/* NAMA + NIM */}
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="label">Nama</label>
+                  <input
+                    required
+                    className="input"
+                    value={form.nama}
+                    onChange={(e) => setForm({ ...form, nama: e.target.value })}
+                  />
+                </div>
 
-          {/* NAMA */}
-          <div>
-            <label className="label">
-              Nama
-            </label>
+                <div>
+                  <label className="label">NIM</label>
+                  <input
+                    required
+                    className="input"
+                    value={form.nim}
+                    onChange={(e) => setForm({ ...form, nim: e.target.value })}
+                  />
+                  {editing && (
+                    <p className="mt-1 text-xs text-slate-400">
+                      NIM akun login akan ikut diperbarui.
+                    </p>
+                  )}
+                </div>
+              </div>
 
-            <input
-              required
-              className="input"
-              value={form.nama}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  nama: e.target.value,
-                })
-              }
-            />
-          </div>
+              {/* NO HP + PRODI */}
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="label">No. HP / WhatsApp</label>
+                  <input
+                    className="input"
+                    value={form.noHp}
+                    onChange={(e) => setForm({ ...form, noHp: e.target.value })}
+                  />
+                </div>
 
-          {/* NIM */}
-          <div>
-            <label className="label">
-              NIM
-            </label>
+                <div>
+                  <label className="label">Prodi</label>
+                  <input
+                    required
+                    className="input"
+                    value={form.prodi}
+                    onChange={(e) => setForm({ ...form, prodi: e.target.value })}
+                  />
+                </div>
+              </div>
 
-            <input
-              required
-              className="input"
-              value={form.nim}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  nim: e.target.value,
-                })
-              }
-            />
+              {/* ANGKATAN + JABATAN */}
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="label">Angkatan</label>
+                  <input
+                    required
+                    className="input"
+                    value={form.angkatan}
+                    onChange={(e) => setForm({ ...form, angkatan: e.target.value })}
+                  />
+                </div>
 
-            {editing && (
-              <p className="mt-1 text-xs text-slate-400">
-                NIM akun login akan ikut diperbarui.
-              </p>
-            )}
-          </div>
+                <div>
+                  <label className="label">Jabatan</label>
+                  <input
+                    className="input"
+                    value={form.jabatan}
+                    onChange={(e) => setForm({ ...form, jabatan: e.target.value })}
+                    placeholder="Contoh: Anggota"
+                  />
+                </div>
+              </div>
 
-          {/* EMAIL */}
-          {!editing && (
-            <div>
-              <label className="label">
-                Email untuk akun login{" "}
-                <span className="text-slate-400 font-normal">
-                  (opsional)
-                </span>
-              </label>
+              {/* TANGGAL LAHIR + DIVISI */}
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="label">Tanggal Lahir</label>
+                  <input
+                    type="date"
+                    className="input"
+                    value={form.tanggalLahir}
+                    onChange={(e) => setForm({ ...form, tanggalLahir: e.target.value })}
+                  />
+                </div>
 
-              <input
-                type="email"
-                className="input"
-                value={form.email}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    email: e.target.value,
-                  })
-                }
-                placeholder="nama@email.com"
-              />
+                <div>
+                  <label className="label">Divisi</label>
+                  {divisiLock ? (
+                    <input
+                      disabled
+                      className="input bg-slate-100 dark:bg-white/5"
+                      value={divisiLock}
+                    />
+                  ) : (
+                    <select
+                      required
+                      className="input"
+                      value={form.divisi}
+                      onChange={(e) => setForm({ ...form, divisi: e.target.value })}
+                    >
+                      <option value="">Pilih divisi</option>
+                      {DIVISI_OPTIONS.map((d) => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              </div>
 
-              <p className="mt-1 text-xs text-slate-400">
-                Isi email untuk langsung membuat akun anggota.
-              </p>
-            </div>
-          )}
+              {/* ALAMAT */}
+              <div>
+                <label className="label">Alamat</label>
+                <textarea
+                  rows={2}
+                  className="input"
+                  value={form.alamat}
+                  onChange={(e) => setForm({ ...form, alamat: e.target.value })}
+                />
+              </div>
 
-          {/* NO HP */}
-          <div>
-            <label className="label">
-              No. HP / WhatsApp
-            </label>
+              {/* PERIODE + STATUS */}
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="label">Periode Keanggotaan</label>
+                  <input
+                    className="input"
+                    value={form.periode}
+                    onChange={(e) => setForm({ ...form, periode: e.target.value })}
+                    placeholder="2025/2026"
+                  />
+                </div>
 
-            <input
-              className="input"
-              value={form.noHp}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  noHp: e.target.value,
-                })
-              }
-            />
-          </div>
+                {editing && (
+                  <div>
+                    <label className="label">Status</label>
+                    <select
+                      className="input"
+                      value={form.status}
+                      onChange={(e) => setForm({ ...form, status: e.target.value })}
+                    >
+                      <option value="Aktif">Aktif</option>
+                      <option value="Non-Aktif">Non-Aktif</option>
+                      <option value="Alumni">Alumni</option>
+                    </select>
+                  </div>
+                )}
+              </div>
 
-          {/* PRODI */}
-          <div>
-            <label className="label">
-              Prodi
-            </label>
-
-            <input
-              required
-              className="input"
-              value={form.prodi}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  prodi: e.target.value,
-                })
-              }
-            />
-          </div>
-
-          {/* ANGKATAN */}
-          <div>
-            <label className="label">
-              Angkatan
-            </label>
-
-            <input
-              required
-              className="input"
-              value={form.angkatan}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  angkatan: e.target.value,
-                })
-              }
-            />
-          </div>
-
-          {/* JABATAN */}
-          <div>
-            <label className="label">
-              Jabatan
-            </label>
-
-            <input
-              className="input"
-              value={form.jabatan}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  jabatan: e.target.value,
-                })
-              }
-              placeholder="Contoh: Anggota"
-            />
-          </div>
-
-          {/* TANGGAL LAHIR */}
-          <div>
-            <label className="label">
-              Tanggal Lahir
-            </label>
-
-            <input
-              type="date"
-              className="input"
-              value={form.tanggalLahir}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  tanggalLahir: e.target.value,
-                })
-              }
-            />
-          </div>
-
-          {/* ALAMAT */}
-          <div className="sm:col-span-2">
-            <label className="label">
-              Alamat
-            </label>
-
-            <textarea
-              rows={2}
-              className="input"
-              value={form.alamat}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  alamat: e.target.value,
-                })
-              }
-            />
-          </div>
-
-          {/* DIVISI */}
-          <div>
-            <label className="label">
-              Divisi
-            </label>
-
-            {divisiLock ? (
-              <input
-                disabled
-                className="input bg-slate-100 dark:bg-white/5"
-                value={divisiLock}
-              />
-            ) : (
-              <select
-                required
-                className="input"
-                value={form.divisi}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    divisi: e.target.value,
-                  })
-                }
-              >
-                <option value="">
-                  Pilih divisi
-                </option>
-
-                {DIVISI_OPTIONS.map((d) => (
-                  <option
-                    key={d}
-                    value={d}
-                  >
-                    {d}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-
-          {/* PERIODE */}
-          <div>
-            <label className="label">
-              Periode Keanggotaan
-            </label>
-
-            <input
-              className="input"
-              value={form.periode}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  periode: e.target.value,
-                })
-              }
-              placeholder="2025/2026"
-            />
-          </div>
-
-          {/* STATUS */}
-          {editing && (
-            <div>
-              <label className="label">
-                Status
-              </label>
-
-              <select
-                className="input"
-                value={form.status}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    status: e.target.value,
-                  })
-                }
-              >
-                <option value="Aktif">
-                  Aktif
-                </option>
-
-                <option value="Non-Aktif">
-                  Non-Aktif
-                </option>
-
-                <option value="Alumni">
-                  Alumni
-                </option>
-              </select>
-            </div>
-          )}
-
-          {/* BUTTON */}
-          <div className="sm:col-span-2">
-            <div className="flex gap-2">
-
-              <button
-                disabled={loading}
-                className="btn-primary"
-              >
-                {loading
-                  ? "Menyimpan..."
-                  : editing
-                  ? "Simpan Perubahan"
-                  : "Simpan Anggota"}
-              </button>
-
-              {editing && (
+              {/* BUTTONS */}
+              <div className="flex gap-2 pt-2">
+                <button disabled={loading} className="btn-primary flex-1">
+                  {loading
+                    ? "Menyimpan..."
+                    : editing
+                    ? "Simpan Perubahan"
+                    : "Simpan Anggota"}
+                </button>
                 <button
                   type="button"
                   onClick={() => {
-                    setForm({
-                      ...emptyForm,
-                      divisi: divisiLock || "",
-                    });
-
+                    setForm({ ...emptyForm, divisi: divisiLock || "" });
                     setShowForm(false);
                   }}
-                  className="btn-outline"
+                  className="btn-outline flex-1"
                 >
                   Batal
                 </button>
-              )}
-
-            </div>
+              </div>
+            </form>
           </div>
-        </form>
+        </div>
       )}
 
       {/* =====================================================
@@ -718,7 +579,6 @@ export default function AnggotaManager({
               <th>Nama</th>
               <th>NIM</th>
               <th>No HP</th>
-              <th>Email</th>
               <th>Prodi</th>
               <th>Jabatan</th>
               <th>Alamat</th>
@@ -738,11 +598,6 @@ export default function AnggotaManager({
 
             {filtered.map((a) => {
 
-              const email =
-                a.user?.email ||
-                a.email ||
-                "-";
-
               return (
                 <tr key={a.id}>
 
@@ -759,11 +614,6 @@ export default function AnggotaManager({
                   {/* NO HP */}
                   <td className="whitespace-nowrap">
                     {a.noHp || "-"}
-                  </td>
-
-                  {/* EMAIL */}
-                  <td className="whitespace-nowrap">
-                    {email}
                   </td>
 
                   {/* PRODI */}
@@ -865,8 +715,7 @@ export default function AnggotaManager({
                               onClick={() =>
                                 kelolaAkun(
                                   a.id,
-                                  "ubah",
-                                  a.user
+                                  "ubah"
                                 )
                               }
                               className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline"
@@ -900,37 +749,18 @@ export default function AnggotaManager({
 
                     ) : (
 
-                      <div className="flex gap-1 items-center">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          buatAkun(a.id, a.nim)
+                        }
+                        title="Buat akun"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline"
+                      >
+                        <FiKey size={12} />
+                        Buat Akun
+                      </button>
 
-                        <input
-                          type="email"
-                          placeholder="email anggota"
-                          className="input !py-1 !px-2 text-xs w-36"
-                          value={
-                            emailInput[a.id] ||
-                            ""
-                          }
-                          onChange={(e) =>
-                            setEmailInput({
-                              ...emailInput,
-                              [a.id]:
-                                e.target.value,
-                            })
-                          }
-                        />
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            buatAkun(a.id)
-                          }
-                          title="Buat akun"
-                          className="grid h-7 w-7 place-items-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 shrink-0"
-                        >
-                          <FiKey size={12} />
-                        </button>
-
-                      </div>
                     )}
 
                   </td>
@@ -968,7 +798,7 @@ export default function AnggotaManager({
             {filtered.length === 0 && (
               <tr>
                 <td
-                  colSpan={readOnly ? 12 : 13}
+                  colSpan={readOnly ? 11 : 12}
                   className="text-center text-slate-400 py-6"
                 >
                   Tidak ada data anggota.
@@ -1017,8 +847,6 @@ export default function AnggotaManager({
             </p>
 
             <p className="text-xs text-slate-500 mb-4">
-              Kredensial ini juga sudah
-              dikirim ke email anggota.
               Simpan/salin sekarang,
               karena password tidak akan
               ditampilkan lagi.
@@ -1037,6 +865,110 @@ export default function AnggotaManager({
 
         </div>
 
+      )}
+
+      {/* =====================================================
+          MODAL BUAT AKUN
+      ===================================================== */}
+
+      {buatAkunModal && (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4 backdrop-blur-sm"
+          onClick={() => {
+            setBuatAkunModal(null);
+            setBuatAkunPassword("");
+          }}
+        >
+          <div
+            className="card w-full max-w-sm"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="mb-1 text-lg font-semibold">Buat Akun Anggota</h3>
+            <p className="mb-4 text-sm text-slate-500">NIM: {buatAkunModal.nim}</p>
+
+            <div className="mb-4">
+              <label className="label">Password</label>
+              <input
+                type="password"
+                className="input"
+                value={buatAkunPassword}
+                onChange={(e) => setBuatAkunPassword(e.target.value)}
+                placeholder="Minimal 6 karakter"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") submitBuatAkun();
+                }}
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <button onClick={submitBuatAkun} className="btn-primary flex-1">
+                Buat Akun
+              </button>
+              <button
+                onClick={() => {
+                  setBuatAkunModal(null);
+                  setBuatAkunPassword("");
+                }}
+                className="btn-outline flex-1"
+              >
+                Batal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================
+          MODAL UBAH KREDENSIAL ANGGOTA
+      ===================================================== */}
+
+      {editKredensialModal && (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4 backdrop-blur-sm"
+          onClick={() => {
+            setEditKredensialModal(null);
+            setEditKredensialPassword("");
+          }}
+        >
+          <div
+            className="card w-full max-w-sm"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="mb-1 text-lg font-semibold">Ubah Password</h3>
+            <p className="mb-4 text-sm text-slate-500">{editKredensialModal.nama}</p>
+
+            <div className="mb-4">
+              <label className="label">Password baru</label>
+              <input
+                type="password"
+                className="input"
+                value={editKredensialPassword}
+                onChange={(e) => setEditKredensialPassword(e.target.value)}
+                placeholder="Minimal 6 karakter"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") submitEditKredensial();
+                }}
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <button onClick={submitEditKredensial} className="btn-primary flex-1">
+                Simpan
+              </button>
+              <button
+                onClick={() => {
+                  setEditKredensialModal(null);
+                  setEditKredensialPassword("");
+                }}
+                className="btn-outline flex-1"
+              >
+                Batal
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>
