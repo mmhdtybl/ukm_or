@@ -12,18 +12,28 @@ export async function GET() {
 
   if (kap.canManageKeuangan) {
     const list = await prisma.keuangan.findMany({
-      include: { anggota: { select: { nama: true, nim: true } }, dicatatOleh: { select: { name: true } } },
+      include: {
+        anggota: { select: { nama: true, nim: true } },
+        pengurus: { select: { nama: true, nim: true } },
+        dicatatOleh: { select: { name: true } },
+      },
       orderBy: { tanggal: "desc" },
     });
     return NextResponse.json(list);
   }
 
-  // Anggota: hanya riwayat kas milik sendiri
-  const anggota = await prisma.anggota.findUnique({ where: { userId: (session.user as any).id } });
-  if (!anggota) return NextResponse.json([], { status: 200 });
+  // Pengurus non-admin/non-DPO / Anggota: hanya riwayat kas milik sendiri
+  const userId = (session.user as any).id;
+  const anggota = await prisma.anggota.findUnique({ where: { userId } });
+  const pengurus = await prisma.pengurus.findUnique({ where: { userId } });
 
   const list = await prisma.keuangan.findMany({
-    where: { anggotaId: anggota.id },
+    where: {
+      OR: [
+        ...(anggota ? [{ anggotaId: anggota.id }] : []),
+        ...(pengurus ? [{ pengurusId: pengurus.id }] : []),
+      ],
+    },
     orderBy: { tanggal: "desc" },
   });
   return NextResponse.json(list);
@@ -54,9 +64,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(item, { status: 201 });
   }
 
-  if (kap.canKelolaKas) {
-    const anggota = await prisma.anggota.findUnique({ where: { userId: (session.user as any).id } });
-    if (!anggota) return NextResponse.json({ message: "Akun ini bukan akun anggota" }, { status: 400 });
+  if (kap.canKelolaKas || (!kap.isAdmin && !kap.isDPO)) {
+    const userId = (session.user as any).id;
+    const anggota = await prisma.anggota.findUnique({ where: { userId } });
+    const pengurus = await prisma.pengurus.findUnique({ where: { userId } });
+
+    if (!anggota && !pengurus) {
+      return NextResponse.json({ message: "Akun ini tidak terhubung dengan data anggota/pengurus" }, { status: 400 });
+    }
 
     const item = await prisma.keuangan.create({
       data: {
@@ -66,7 +81,8 @@ export async function POST(req: NextRequest) {
         keterangan: body.keterangan || null,
         buktiUrl: body.buktiUrl || null,
         status: "PENDING",
-        anggotaId: anggota.id,
+        anggotaId: anggota?.id || null,
+        pengurusId: pengurus?.id || null,
         tanggal: new Date(),
       },
     });

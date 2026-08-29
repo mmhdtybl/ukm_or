@@ -10,7 +10,11 @@ export default async function KelolaKeuanganPage() {
   if (!kap?.canManageKeuangan) redirect("/dashboard");
 
   const keuangan = await prisma.keuangan.findMany({
-    include: { anggota: { select: { nama: true, nim: true } }, dicatatOleh: { select: { name: true } } },
+    include: {
+      anggota: { select: { nama: true, nim: true } },
+      pengurus: { select: { nama: true, nim: true } },
+      dicatatOleh: { select: { name: true } },
+    },
     orderBy: { tanggal: "desc" },
   });
 

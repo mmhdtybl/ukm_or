@@ -204,7 +204,7 @@ export default function DashboardShell({
       href: "/akun-saya/kas",
       label: "Kas Saya",
       icon: FiDollarSign,
-      show: kap.canKelolaKas,
+      show: !kap.isAdmin && !kap.isDPO,
     },
 
     {

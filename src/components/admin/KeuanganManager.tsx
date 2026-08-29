@@ -83,7 +83,7 @@ export default function KeuanganManager({
                   <tr key={k.id}>
                     <td>{formatTanggal(k.tanggal)}</td>
                     <td>{k.kategori}</td>
-                    <td>{k.anggota ? `${k.anggota.nama} (${k.anggota.nim})` : k.dicatatOleh?.name || "-"}</td>
+                    <td>{k.anggota ? `${k.anggota.nama} (${k.anggota.nim})` : k.pengurus ? `${k.pengurus.nama} (Pengurus)` : k.dicatatOleh?.name || "-"}</td>
                     <td className={k.jenis === "MASUK" ? "text-green-600" : "text-red-500"}>{k.jenis}</td>
                     <td>{formatUang(k.jumlah)}</td>
                     <td>

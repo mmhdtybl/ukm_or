@@ -1,17 +1,34 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { getKapabilitas } from "@/lib/permissions";
 import KasSayaClient from "./KasSayaClient";
 
 export const metadata = { title: "Kas Saya" };
 
 export default async function KasSayaPage() {
   const session = await auth();
-  const anggota = await prisma.anggota.findUnique({ where: { userId: (session!.user as any).id } });
+  const kap = await getKapabilitas();
+  if (!session || !kap) return null;
 
-  if (!anggota) return <div className="card">Akun ini belum terhubung dengan data anggota.</div>;
+  if (kap.isAdmin || kap.isDPO) {
+    return <div className="card">Anda tidak memiliki akses ke halaman ini.</div>;
+  }
+
+  const userId = (session.user as any).id;
+  const anggota = await prisma.anggota.findUnique({ where: { userId } });
+  const pengurus = await prisma.pengurus.findUnique({ where: { userId } });
+
+  if (!anggota && !pengurus) {
+    return <div className="card">Akun ini belum terhubung dengan data anggota/pengurus.</div>;
+  }
 
   const riwayat = await prisma.keuangan.findMany({
-    where: { anggotaId: anggota.id },
+    where: {
+      OR: [
+        ...(anggota ? [{ anggotaId: anggota.id }] : []),
+        ...(pengurus ? [{ pengurusId: pengurus.id }] : []),
+      ],
+    },
     orderBy: { tanggal: "desc" },
   });
 
