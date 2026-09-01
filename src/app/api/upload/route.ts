@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { StorageClient } from "@supabase/storage-js";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
@@ -17,6 +18,32 @@ const ALLOWED_TYPES = [
 ];
 
 const ALLOWED_EXT = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"];
+
+const BUCKET = process.env.SUPABASE_STORAGE_BUCKET || "uploads";
+
+let storage: StorageClient | null = null;
+
+function getStorage(): StorageClient {
+  if (storage) return storage;
+  const url = String(process.env.SUPABASE_URL).replace(/\/$/, "");
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
+  storage = new StorageClient(`${url}/storage/v1`, {
+    Authorization: `Bearer ${key}`,
+    apiKey: key,
+  });
+  return storage;
+}
+
+// Supabase Storage dipakai di produksi (persisten). Bila kredensial belum
+// tersedia, fallback ke filesystem lokal untuk pengembangan.
+function pakaiSupabase(): boolean {
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return false;
+  }
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (key.includes("xxxxx") || key.includes("placeholder")) return false;
+  return true;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -51,31 +78,63 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    let ext = path.extname(file.name || "").toLowerCase();
+
+    const mapType: Record<string, string> = {
+      "image/jpeg": ".jpg",
+      "image/jpg": ".jpg",
+      "image/png": ".png",
+      "image/webp": ".webp",
+      "image/heic": ".heic",
+      "image/heif": ".heif",
+      "image/heic-sequence": ".heic",
+      "image/heif-sequence": ".heif",
+    };
+
+    if (!ALLOWED_EXT.includes(ext)) {
+      ext = mapType[file.type] || (ext ? ext : "");
+    }
+
+    const mimeDipakai = ALLOWED_TYPES.includes(file.type);
+    const extDipakai = ALLOWED_EXT.includes(ext);
+
+    if (!mimeDipakai && !extDipakai) {
       return NextResponse.json(
         { message: "Format file tidak didukung. Gunakan JPG, PNG, WEBP, HEIC, atau HEIF." },
         { status: 400 }
       );
     }
 
-    let ext = path.extname(file.name || "").toLowerCase();
-    if (!ALLOWED_EXT.includes(ext)) {
-      const mapType: Record<string, string> = {
-        "image/jpeg": ".jpg",
-        "image/png": ".png",
-        "image/webp": ".webp",
-        "image/heic": ".heic",
-        "image/heif": ".heif",
-        "image/heic-sequence": ".heic",
-        "image/heif-sequence": ".heif",
-      };
-      ext = mapType[file.type] || ".jpg";
-    }
+    if (!extDipakai) ext = mapType[file.type] || ".jpg";
 
     const filename = `${Date.now()}-${Math.random()
       .toString(36)
       .slice(2, 8)}${ext}`;
 
+    // ---- Produksi: Supabase Storage ----
+    if (pakaiSupabase()) {
+      const buffer = Buffer.from(await file.arrayBuffer());
+      const { data, error } = await getStorage()
+        .from(BUCKET)
+        .upload(filename, buffer, {
+          contentType: file.type || "application/octet-stream",
+          upsert: true,
+        });
+
+      if (error) {
+        console.error("Supabase upload error:", error);
+        return NextResponse.json(
+          { message: "Upload gagal: " + (error.message || "Terjadi kesalahan.") },
+          { status: 500 }
+        );
+      }
+
+      const { data: publicData } = getStorage().from(BUCKET).getPublicUrl(data.path);
+
+      return NextResponse.json({ url: publicData.publicUrl }, { status: 200 });
+    }
+
+    // ---- Pengembangan: filesystem lokal ----
     const dir = path.join(process.cwd(), "public", "uploads");
     await mkdir(dir, { recursive: true });
 
