@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import { StorageClient } from "@supabase/storage-js";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import heicDecode from "heic-decode";
+import jpeg from "jpeg-js";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -18,6 +20,25 @@ const ALLOWED_TYPES = [
 ];
 
 const ALLOWED_EXT = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"];
+
+const CONVERT_EXT = new Set([".heic", ".heif"]);
+const CONVERT_MIME = new Set([
+  "image/heic",
+  "image/heif",
+  "image/heic-sequence",
+  "image/heif-sequence",
+]);
+
+// HEIC/HEIF tidak bisa dirender browser umum & optimizer gambar, jadi
+// dikonversi ke JPEG saat upload (libheif wasm + jpeg-js, tanpa modul native).
+async function ubahKeJpeg(buffer: Buffer): Promise<Buffer> {
+  const hasil = await heicDecode({ buffer }) as { width: number; height: number; data: Uint8Array };
+  const encoded = jpeg.encode(
+    { data: hasil.data, width: hasil.width, height: hasil.height },
+    85
+  );
+  return Buffer.from(encoded.data);
+}
 
 const BUCKET = process.env.SUPABASE_STORAGE_BUCKET || "uploads";
 
@@ -107,17 +128,26 @@ export async function POST(req: NextRequest) {
 
     if (!extDipakai) ext = mapType[file.type] || ".jpg";
 
+    let buffer: Buffer = Buffer.from(await file.arrayBuffer());
+    let ekstensiAkhir = ext;
+    let mimeAkhir = file.type || "application/octet-stream";
+
+    if (CONVERT_EXT.has(ext) || CONVERT_MIME.has(file.type)) {
+      buffer = await ubahKeJpeg(buffer);
+      ekstensiAkhir = ".jpg";
+      mimeAkhir = "image/jpeg";
+    }
+
     const filename = `${Date.now()}-${Math.random()
       .toString(36)
-      .slice(2, 8)}${ext}`;
+      .slice(2, 8)}${ekstensiAkhir}`;
 
     // ---- Produksi: Supabase Storage ----
     if (pakaiSupabase()) {
-      const buffer = Buffer.from(await file.arrayBuffer());
       const { data, error } = await getStorage()
         .from(BUCKET)
         .upload(filename, buffer, {
-          contentType: file.type || "application/octet-stream",
+          contentType: mimeAkhir,
           upsert: true,
         });
 
@@ -138,7 +168,6 @@ export async function POST(req: NextRequest) {
     const dir = path.join(process.cwd(), "public", "uploads");
     await mkdir(dir, { recursive: true });
 
-    const buffer = Buffer.from(await file.arrayBuffer());
     await writeFile(path.join(dir, filename), buffer);
 
     return NextResponse.json({ url: `/uploads/${filename}` }, { status: 200 });

@@ -180,6 +180,7 @@ export async function PUT(req: NextRequest) {
         prodi: prodiStr || undefined,
         noHp: noHpStr || null,
         tanggalLahir: tanggalLahirDate,
+        foto: typeof avatar === "string" && avatar ? avatar : null,
       };
 
       if (role === "ANGGOTA") {
