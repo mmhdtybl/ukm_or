@@ -264,25 +264,35 @@ model Arsip {
 }
 
 model Keuangan {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   jenis         String
   kategori      String
   jumlah        Float
   keterangan    String?
   buktiUrl      String?
+  metode        String    @default("OFFLINE")
   anggotaId     String?
   pengurusId    String?
-  status        String   @default("DIVERIFIKASI")
+  status        String    @default("DIVERIFIKASI")
   dicatatOlehId String?
-  tanggal       DateTime @default(now())
-  createdAt     DateTime @default(now())
-  anggota       Anggota? @relation(fields: [anggotaId], references: [id])
+  tanggal       DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  anggota       Anggota?  @relation(fields: [anggotaId], references: [id])
   pengurus      Pengurus? @relation(fields: [pengurusId], references: [id])
-  dicatatOleh   User?    @relation(fields: [dicatatOlehId], references: [id])
+  dicatatOleh   User?     @relation(fields: [dicatatOlehId], references: [id])
 
   @@index([anggotaId])
   @@index([pengurusId])
   @@index([dicatatOlehId])
+}
+
+model KasKonfigurasi {
+  id        String   @id @default(cuid())
+  tujuan    String?
+  createdBy String?
+  updatedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 }
 
 model Barang {

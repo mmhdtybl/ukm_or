@@ -80,6 +80,7 @@ export async function POST(req: NextRequest) {
         jumlah: Number(body.jumlah),
         keterangan: body.keterangan || null,
         buktiUrl: body.buktiUrl || null,
+        metode: body.metode === "TRANSFER" ? "TRANSFER" : "OFFLINE",
         status: "PENDING",
         anggotaId: anggota?.id || null,
         pengurusId: pengurus?.id || null,

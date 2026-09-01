@@ -3,17 +3,31 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatTanggal, formatUang } from "@/lib/utils";
-import { FiCheck, FiX, FiTrash2 } from "react-icons/fi";
+import { FiCheck, FiX, FiTrash2, FiSave } from "react-icons/fi";
 
 const emptyForm = { jenis: "MASUK", kategori: "", jumlah: "", keterangan: "" };
 
 export default function KeuanganManager({
-  initialData, saldo, totalMasuk, totalKeluar,
-}: { initialData: any[]; saldo: number; totalMasuk: number; totalKeluar: number }) {
+  initialData, saldo, totalMasuk, totalKeluar, tujuan,
+}: { initialData: any[]; saldo: number; totalMasuk: number; totalKeluar: number; tujuan: string | null }) {
   const router = useRouter();
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState("SEMUA");
+  const [tujuanInput, setTujuanInput] = useState(tujuan || "");
+  const [savingTujuan, setSavingTujuan] = useState(false);
+
+  async function saveTujuan(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingTujuan(true);
+    await fetch("/api/keuangan/config", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tujuan: tujuanInput }),
+    });
+    setSavingTujuan(false);
+    router.refresh();
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -53,6 +67,22 @@ export default function KeuanganManager({
         <div className="card text-center"><div className="text-xl font-bold text-red-500">{formatUang(totalKeluar)}</div><div className="text-xs text-slate-500">Total Keluar</div></div>
       </div>
 
+      <form onSubmit={saveTujuan} className="card mb-6 flex flex-col gap-2 sm:flex-row sm:items-end">
+        <div className="flex-1">
+          <label className="label">Tujuan Transfer Kas (untuk metode Transfer)</label>
+          <input
+            className="input"
+            value={tujuanInput}
+            onChange={(e) => setTujuanInput(e.target.value)}
+            placeholder="contoh: BCA 1234567890 a.n. UKM Olahraga"
+          />
+          <p className="text-xs text-slate-400 mt-1">Nomer rekening bank atau nomer telepon yang ditampilkan saat anggota memilih bayar via Transfer.</p>
+        </div>
+        <button disabled={savingTujuan} className="btn-primary inline-flex items-center gap-2 disabled:opacity-40">
+          <FiSave size={14} /> {savingTujuan ? "Menyimpan..." : "Simpan"}
+        </button>
+      </form>
+
       <div className="grid md:grid-cols-3 gap-6">
         <form onSubmit={handleSubmit} className="card space-y-4 h-fit">
           <h3 className="font-semibold">Catat Transaksi</h3>
@@ -77,13 +107,14 @@ export default function KeuanganManager({
           </div>
           <div className="card overflow-x-auto">
             <table className="table-admin">
-              <thead><tr><th>Tanggal</th><th>Kategori</th><th>Dari</th><th>Jenis</th><th>Jumlah</th><th>Status</th><th>Aksi</th></tr></thead>
+              <thead><tr><th>Tanggal</th><th>Kategori</th><th>Dari</th><th>Metode</th><th>Jenis</th><th>Jumlah</th><th>Status</th><th>Aksi</th></tr></thead>
               <tbody>
                 {filtered.map((k) => (
                   <tr key={k.id}>
                     <td>{formatTanggal(k.tanggal)}</td>
                     <td>{k.kategori}</td>
                     <td>{k.anggota ? `${k.anggota.nama} (${k.anggota.nim})` : k.pengurus ? `${k.pengurus.nama} (Pengurus)` : k.dicatatOleh?.name || "-"}</td>
+                    <td><span className="text-xs font-medium uppercase text-slate-500 dark:text-slate-400">{k.metode === "TRANSFER" ? "Transfer" : "Offline"}</span></td>
                     <td className={k.jenis === "MASUK" ? "text-green-600" : "text-red-500"}>{k.jenis}</td>
                     <td>{formatUang(k.jumlah)}</td>
                     <td>
@@ -102,7 +133,7 @@ export default function KeuanganManager({
                     </td>
                   </tr>
                 ))}
-                {filtered.length === 0 && <tr><td colSpan={7} className="text-center text-slate-400 py-6">Tidak ada data.</td></tr>}
+                {filtered.length === 0 && <tr><td colSpan={8} className="text-center text-slate-400 py-6">Tidak ada data.</td></tr>}
               </tbody>
             </table>
           </div>

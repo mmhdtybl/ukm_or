@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { getKapabilitas } from "@/lib/permissions";
+import { getKasConfig } from "@/lib/kas-config";
 import KeuanganManager from "@/components/admin/KeuanganManager";
 
 export const metadata = { title: "Kelola Keuangan" };
@@ -21,6 +22,8 @@ export default async function KelolaKeuanganPage() {
   const totalMasuk = keuangan.filter((k) => k.jenis === "MASUK" && k.status === "DIVERIFIKASI").reduce((s, k) => s + k.jumlah, 0);
   const totalKeluar = keuangan.filter((k) => k.jenis === "KELUAR" && k.status === "DIVERIFIKASI").reduce((s, k) => s + k.jumlah, 0);
 
+  const konfigurasi = await getKasConfig();
+
   return (
     <div>
       <h1 className="text-2xl font-bold text-primary dark:text-white mb-1">Kelola Kas & Keuangan</h1>
@@ -30,6 +33,7 @@ export default async function KelolaKeuanganPage() {
         saldo={totalMasuk - totalKeluar}
         totalMasuk={totalMasuk}
         totalKeluar={totalKeluar}
+        tujuan={konfigurasi?.tujuan || null}
       />
     </div>
   );

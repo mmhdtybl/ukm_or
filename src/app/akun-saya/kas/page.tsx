@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { getKapabilitas } from "@/lib/permissions";
+import { getKasConfig } from "@/lib/kas-config";
 import KasSayaClient from "./KasSayaClient";
 
 export const metadata = { title: "Kas Saya" };
@@ -32,11 +33,16 @@ export default async function KasSayaPage() {
     orderBy: { tanggal: "desc" },
   });
 
+  const konfigurasi = await getKasConfig();
+
   return (
     <div>
       <h1 className="text-xl font-bold text-primary dark:text-white mb-1">Kas Saya</h1>
       <p className="text-sm text-slate-500 mb-6">Ajukan laporan pembayaran kas rutin. Laporan akan diverifikasi oleh Bendahara.</p>
-      <KasSayaClient riwayat={JSON.parse(JSON.stringify(riwayat))} />
+      <KasSayaClient
+        riwayat={JSON.parse(JSON.stringify(riwayat))}
+        tujuan={konfigurasi?.tujuan || null}
+      />
     </div>
   );
 }
