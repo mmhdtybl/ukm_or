@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { formatTanggalWaktu } from "@/lib/utils";
 import DataTableActions from "./DataTableActions";
 import { FiCheck } from "react-icons/fi";
+import { DIVISI_OPTIONS } from "@/lib/divisi";
 
-const DIVISI_OPTIONS = ["Umum", "Voli", "Futsal", "Bulutangkis", "E-Sport", "Taekwondo", "Basket"];
+const DIVISI_OPTIONS_BARANG = ["Umum", ...DIVISI_OPTIONS];
 const emptyForm = { id: "", nama: "", divisi: "Umum", jumlah: 1, kondisi: "Baik", keterangan: "" };
 
 export default function BarangManager({ initialBarang, initialKomentar }: { initialBarang: any[]; initialKomentar: any[] }) {
@@ -40,7 +41,7 @@ export default function BarangManager({ initialBarang, initialKomentar }: { init
           <div>
             <label className="label">Divisi/Pemilik</label>
             <select className="input" value={form.divisi} onChange={(e) => setForm({ ...form, divisi: e.target.value })}>
-              {DIVISI_OPTIONS.map((d) => <option key={d} value={d}>{d}</option>)}
+              {DIVISI_OPTIONS_BARANG.map((d) => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
           <div><label className="label">Jumlah</label><input type="number" required className="input" value={form.jumlah} onChange={(e) => setForm({ ...form, jumlah: Number(e.target.value) })} /></div>

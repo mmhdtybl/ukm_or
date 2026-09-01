@@ -3,16 +3,20 @@ import { auth } from "@/lib/auth";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
-const MAX_FILE_SIZE = 4 * 1024 * 1024;
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 const ALLOWED_TYPES = [
   "image/jpeg",
   "image/jpg",
   "image/png",
   "image/webp",
+  "image/heic",
+  "image/heif",
+  "image/heic-sequence",
+  "image/heif-sequence",
 ];
 
-const ALLOWED_EXT = [".jpg", ".jpeg", ".png", ".webp"];
+const ALLOWED_EXT = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"];
 
 export async function POST(req: NextRequest) {
   try {
@@ -42,14 +46,14 @@ export async function POST(req: NextRequest) {
 
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { message: "Ukuran file maksimal 4 MB." },
+        { message: "Ukuran file maksimal 10 MB." },
         { status: 413 }
       );
     }
 
     if (!ALLOWED_TYPES.includes(file.type)) {
       return NextResponse.json(
-        { message: "Format file tidak didukung. Gunakan JPG, PNG, atau WEBP." },
+        { message: "Format file tidak didukung. Gunakan JPG, PNG, WEBP, HEIC, atau HEIF." },
         { status: 400 }
       );
     }
@@ -60,6 +64,10 @@ export async function POST(req: NextRequest) {
         "image/jpeg": ".jpg",
         "image/png": ".png",
         "image/webp": ".webp",
+        "image/heic": ".heic",
+        "image/heif": ".heif",
+        "image/heic-sequence": ".heic",
+        "image/heif-sequence": ".heif",
       };
       ext = mapType[file.type] || ".jpg";
     }

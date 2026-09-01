@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { FiSave } from "react-icons/fi";
 import ImageUploader from "@/components/admin/ImageUploader";
 import PasswordInput from "@/components/PasswordInput";
+import { DIVISI_OPTIONS } from "@/lib/divisi";
 
 type Profil = {
   name: string;
@@ -133,7 +134,10 @@ export default function ProfilSayaForm({
             </div>
             <div>
               <label className="label" htmlFor="profil-divisi">Divisi</label>
-              <input id="profil-divisi" className="input" value={form.divisi} onChange={(e) => set("divisi", e.target.value)} placeholder="contoh: Humas" />
+              <select id="profil-divisi" className="input" value={form.divisi} onChange={(e) => set("divisi", e.target.value)}>
+                <option value="">-- Pilih Divisi --</option>
+                {DIVISI_OPTIONS.map((d) => <option key={d} value={d}>{d}</option>)}
+              </select>
             </div>
           </div>
 

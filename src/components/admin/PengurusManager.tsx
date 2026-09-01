@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import ImageUploader from "./ImageUploader";
 import DataTableActions from "./DataTableActions";
+import { DIVISI_OPTIONS } from "@/lib/divisi";
 
 const emptyForm = {
   id: "",
@@ -39,8 +40,6 @@ const KODE_JABATAN_OPTIONS = [
   { value: "KADIV", label: "Kepala Divisi (Kadiv)", kelompok: "Kadiv", jabatanDefault: "Kadiv" },
   { value: "STAFF_DIVISI", label: "Staff Divisi Cabang Olahraga", kelompok: "Staff Divisi", jabatanDefault: "Staff Divisi" },
 ];
-
-const DIVISI_OPTIONS = ["Voli", "Futsal", "Bulutangkis", "E-Sport", "Taekwondo", "Basket"];
 
 export default function PengurusManager({
   initialData,
@@ -235,15 +234,13 @@ export default function PengurusManager({
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Label Jabatan</label>
           <input required className="w-full rounded-xl border border-slate-300 dark:border-slate-600 px-3.5 py-2 text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-white outline-none focus:border-blue-500" value={form.jabatan} onChange={(e) => setForm({ ...form, jabatan: e.target.value })} placeholder="Contoh: Ketua Umum" />
         </div>
-        {(form.kodeJabatan === "KADIV" || form.kodeJabatan === "STAFF_DIVISI") && (
-          <div className="col-span-1 md:col-span-2">
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Cabang Olahraga / Divisi</label>
-            <select className="w-full rounded-xl border border-slate-300 dark:border-slate-600 px-3.5 py-2 text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-white outline-none focus:border-blue-500" value={form.divisi} onChange={(e) => setForm({ ...form, divisi: e.target.value })}>
-              <option value="">-- Pilih Cabang Olahraga --</option>
-              {DIVISI_OPTIONS.map((d) => (<option key={d} value={d}>{d}</option>))}
-            </select>
-          </div>
-        )}
+        <div className="col-span-1 md:col-span-2">
+          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Divisi / Kelompok</label>
+          <select className="w-full rounded-xl border border-slate-300 dark:border-slate-600 px-3.5 py-2 text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-white outline-none focus:border-blue-500" value={form.divisi} onChange={(e) => setForm({ ...form, divisi: e.target.value })}>
+            <option value="">-- Pilih Divisi --</option>
+            {DIVISI_OPTIONS.map((d) => (<option key={d} value={d}>{d}</option>))}
+          </select>
+        </div>
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Periode Mulai</label>
           <input required className="w-full rounded-xl border border-slate-300 dark:border-slate-600 px-3.5 py-2 text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-white outline-none focus:border-blue-500" value={form.periodeMulai} onChange={(e) => setForm({ ...form, periodeMulai: e.target.value })} placeholder="Contoh: 2026/2027" />

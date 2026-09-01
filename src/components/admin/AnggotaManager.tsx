@@ -4,15 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import DataTableActions from "./DataTableActions";
 import { FiEdit2, FiKey, FiPlus } from "react-icons/fi";
-
-const DIVISI_OPTIONS = [
-  "Voli",
-  "Futsal",
-  "Bulutangkis",
-  "E-Sport",
-  "Taekwondo",
-  "Basket",
-];
+import { DIVISI_OPTIONS } from "@/lib/divisi";
 
 const emptyForm = {
   id: "",
