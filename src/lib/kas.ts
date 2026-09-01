@@ -9,7 +9,51 @@ export function getPeriodeSekarang(): string {
   return `${tahun}/${tahun + 1}`;
 }
 
-type KasRetribusiAnggota = { anggotaId: string | null; pengurusId: string | null };
+export type StatusKasBulanan = {
+  bayarBulanIni: boolean;
+  bayarBulanLalu: boolean;
+  sumBulanIni: number;
+  sumBulanLalu: number;
+  namaBulanIni: string;
+  namaBulanLalu: string;
+};
+
+export async function hitungKasBulanan(anggotaId: string | null, pengurusId: string | null): Promise<StatusKasBulanan> {
+  const now = new Date();
+  const startBulanLalu = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const startBulanIni = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startBulanDepan = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+  const kewajiban =
+    anggotaId && pengurusId
+      ? { OR: [{ anggotaId }, { pengurusId }] }
+      : anggotaId
+      ? { anggotaId }
+      : pengurusId
+      ? { pengurusId }
+      : {};
+
+  const payments = await prisma.keuangan.findMany({
+    where: { status: "DIVERIFIKASI", ...kewajiban },
+    select: { jumlah: true, tanggal: true },
+  });
+
+  const sumBulanLalu = payments
+    .filter((p) => p.tanggal >= startBulanLalu && p.tanggal < startBulanIni)
+    .reduce((s, p) => s + p.jumlah, 0);
+  const sumBulanIni = payments
+    .filter((p) => p.tanggal >= startBulanIni && p.tanggal < startBulanDepan)
+    .reduce((s, p) => s + p.jumlah, 0);
+
+  return {
+    bayarBulanIni: sumBulanIni >= KAS_PER_BULAN,
+    bayarBulanLalu: sumBulanLalu >= KAS_PER_BULAN,
+    sumBulanIni,
+    sumBulanLalu,
+    namaBulanIni: startBulanIni.toLocaleDateString("id-ID", { month: "long", year: "numeric" }),
+    namaBulanLalu: startBulanLalu.toLocaleDateString("id-ID", { month: "long", year: "numeric" }),
+  };
+}
 
 export async function hitungKasPeriodik(anggotaId: string | null, pengurusId: string | null, periode: string): Promise<{
   terbayar: number;

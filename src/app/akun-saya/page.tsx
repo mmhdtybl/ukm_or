@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { formatUang } from "@/lib/utils";
 import { FiCamera, FiDollarSign, FiMessageSquare } from "react-icons/fi";
-import { getPeriodeSekarang, hitungKasPeriodik, getDataUlangTahun } from "@/lib/kas";
+import { hitungKasBulanan, getDataUlangTahun } from "@/lib/kas";
 import KasNotifCard from "@/components/KasNotifCard";
 import BirthdayPanel from "@/components/BirthdayPanel";
 
@@ -19,15 +19,13 @@ export default async function AkunSayaPage() {
     return <div className="card">Akun ini belum terhubung dengan data anggota. Hubungi admin UKM.</div>;
   }
 
-  const [totalKas, kasTerverifikasi, komentarSaya, kasPeriodik, dataUlang] = await Promise.all([
+  const [totalKas, kasTerverifikasi, komentarSaya, kasBulanan, dataUlang] = await Promise.all([
     prisma.keuangan.count({ where: { anggotaId: anggota.id } }),
     prisma.keuangan.aggregate({ where: { anggotaId: anggota.id, status: "DIVERIFIKASI" }, _sum: { jumlah: true } }),
     prisma.komentarBarang.count({ where: { anggotaId: anggota.id } }),
-    hitungKasPeriodik(anggota.id, null, getPeriodeSekarang()),
+    hitungKasBulanan(anggota.id, null),
     getDataUlangTahun(),
   ]);
-
-  const periode = getPeriodeSekarang();
 
   return (
     <div className="space-y-6">
@@ -53,10 +51,8 @@ export default async function AkunSayaPage() {
       </div>
 
       <KasNotifCard
-        terbayar={kasPeriodik.terbayar}
-        sisa={kasPeriodik.sisa}
-        periode={periode}
         nama={anggota.nama}
+        status={kasBulanan}
       />
 
       <BirthdayPanel orang={dataUlang} />

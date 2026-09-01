@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { formatTanggal } from "@/lib/utils";
 import { getKapabilitas } from "@/lib/permissions";
-import { getPeriodeSekarang, hitungKasPeriodik, getDataUlangTahun } from "@/lib/kas";
+import { hitungKasBulanan, getDataUlangTahun } from "@/lib/kas";
 import KasNotifCard from "@/components/KasNotifCard";
 import BirthdayPanel from "@/components/BirthdayPanel";
 import {
@@ -89,7 +89,7 @@ export default async function DashboardHomePage() {
     }),
   ]);
 
-  let pengurusKas: null | { terbayar: number; sisa: number } = null;
+  let pengurusKas: null | import("@/lib/kas").StatusKasBulanan = null;
   let namaUser = namaPengguna;
   const kap = await getKapabilitas();
   const userId = (session?.user as any)?.id;
@@ -100,10 +100,10 @@ export default async function DashboardHomePage() {
     const anggota = await prisma.anggota.findUnique({ where: { userId } });
     if (pengurus) {
       namaUser = pengurus.nama || namaPengguna;
-      pengurusKas = await hitungKasPeriodik(null, pengurus.id, getPeriodeSekarang());
+      pengurusKas = await hitungKasBulanan(null, pengurus.id);
     } else if (anggota) {
       namaUser = anggota.nama || namaPengguna;
-      pengurusKas = await hitungKasPeriodik(anggota.id, null, getPeriodeSekarang());
+      pengurusKas = await hitungKasBulanan(anggota.id, null);
     }
   }
 
@@ -178,10 +178,8 @@ export default async function DashboardHomePage() {
 
       {pengurusKas && (
         <KasNotifCard
-          terbayar={pengurusKas.terbayar}
-          sisa={pengurusKas.sisa}
-          periode={getPeriodeSekarang()}
           nama={namaUser}
+          status={pengurusKas}
         />
       )}
 
