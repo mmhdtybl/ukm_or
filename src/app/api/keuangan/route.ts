@@ -83,6 +83,7 @@ export async function POST(req: NextRequest) {
         buktiUrl: body.buktiUrl || null,
         metode: body.metode === "TRANSFER" ? "TRANSFER" : "OFFLINE",
         periode: getPeriodeSekarang(),
+        bulanTagih: typeof body.bulanTagih === "string" ? body.bulanTagih : null,
         status: "PENDING",
         anggotaId: anggota?.id || null,
         pengurusId: pengurus?.id || null,

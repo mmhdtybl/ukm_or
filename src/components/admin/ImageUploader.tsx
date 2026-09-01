@@ -6,17 +6,29 @@ import { FiUpload } from "react-icons/fi";
 
 export default function ImageUploader({ value, onChange, label = "Gambar", circular = false }: { value: string; onChange: (url: string) => void; label?: string; circular?: boolean }) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setLoading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await fetch("/api/upload", { method: "POST", body: formData });
-    const data = await res.json();
-    setLoading(false);
-    if (data.url) onChange(data.url);
+    setError("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || "Gagal mengunggah gambar.");
+        return;
+      }
+      if (data.url) onChange(data.url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gagal mengunggah gambar.");
+    } finally {
+      setLoading(false);
+      e.target.value = "";
+    }
   }
 
   return (
@@ -31,6 +43,7 @@ export default function ImageUploader({ value, onChange, label = "Gambar", circu
           <input type="file" accept="image/*" onChange={handleUpload} className="hidden" />
         </label>
       </div>
+      {error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>}
     </div>
   );
 }

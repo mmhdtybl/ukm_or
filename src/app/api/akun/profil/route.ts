@@ -25,14 +25,24 @@ export async function PUT(req: NextRequest) {
   }
 
   // Ambil data dari request
-  const { name, avatar, nim, password } = await req.json();
+  const { name, avatar, nim, password, prodi, divisi, jabatan, noHp, tanggalLahir, periode } = await req.json();
 
   const nama = typeof name === "string" ? name.trim() : "";
   const npm = typeof nim === "string" ? nim.trim() : "";
+  const prodiStr = typeof prodi === "string" ? prodi.trim() : "";
+  const divisiStr = typeof divisi === "string" ? divisi.trim() : "";
+  const jabatanStr = typeof jabatan === "string" ? jabatan.trim() : "";
+  const noHpStr = typeof noHp === "string" ? noHp.trim() : "";
+  const periodeStr = typeof periode === "string" ? periode.trim() : "";
+  const tanggalLahirDate =
+    typeof tanggalLahir === "string" && tanggalLahir.trim()
+      ? new Date(tanggalLahir.trim())
+      : null;
+
+  const role = (session.user as { role?: string }).role;
 
   // Cek role user
-  const isAdmin =
-    (session.user as { role?: string }).role === "ADMIN";
+  const isAdmin = role === "ADMIN";
 
   // Validasi nama
   if (!nama) {
@@ -161,6 +171,37 @@ export async function PUT(req: NextRequest) {
           nim: npm,
         },
       });
+    }
+
+    // Persist data profil ke tabel Anggota/Pengurus sesuai peran akun
+    if (role === "ANGGOTA" || role === "PENGURUS") {
+      const dataUmum = {
+        nama,
+        prodi: prodiStr || undefined,
+        noHp: noHpStr || null,
+        tanggalLahir: tanggalLahirDate,
+      };
+
+      if (role === "ANGGOTA") {
+        await tx.anggota.updateMany({
+          where: { userId },
+          data: {
+            ...dataUmum,
+            divisi: divisiStr || null,
+            periode: periodeStr || null,
+          },
+        });
+      } else if (role === "PENGURUS") {
+        await tx.pengurus.updateMany({
+          where: { userId },
+          data: {
+            ...dataUmum,
+            divisi: divisiStr || null,
+            jabatan: jabatanStr || undefined,
+            periodeMulai: periodeStr || undefined,
+          },
+        });
+      }
     }
 
     return updated;

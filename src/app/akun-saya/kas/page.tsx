@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { getKapabilitas } from "@/lib/permissions";
 import { getKasConfig } from "@/lib/kas-config";
+import { getBulanKasList, getKasBulanUser } from "@/lib/kas";
 import KasSayaClient from "./KasSayaClient";
 
 export const metadata = { title: "Kas Saya" };
@@ -23,24 +24,18 @@ export default async function KasSayaPage() {
     return <div className="card">Akun ini belum terhubung dengan data anggota/pengurus.</div>;
   }
 
-  const riwayat = await prisma.keuangan.findMany({
-    where: {
-      OR: [
-        ...(anggota ? [{ anggotaId: anggota.id }] : []),
-        ...(pengurus ? [{ pengurusId: pengurus.id }] : []),
-      ],
-    },
-    orderBy: { tanggal: "desc" },
-  });
-
-  const konfigurasi = await getKasConfig();
+  const [bulanKas, konfigurasi] = await Promise.all([
+    getKasBulanUser(anggota?.id ?? null, pengurus?.id ?? null),
+    getKasConfig(),
+  ]);
 
   return (
     <div>
       <h1 className="text-xl font-bold text-primary dark:text-white mb-1">Kas Saya</h1>
       <p className="text-sm text-slate-500 mb-6">Ajukan laporan pembayaran kas rutin. Laporan akan diverifikasi oleh Bendahara.</p>
       <KasSayaClient
-        riwayat={JSON.parse(JSON.stringify(riwayat))}
+        bulanKas={JSON.parse(JSON.stringify(bulanKas))}
+        bulanList={getBulanKasList()}
         tujuan={konfigurasi?.tujuan || null}
       />
     </div>

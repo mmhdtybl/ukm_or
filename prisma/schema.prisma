@@ -274,6 +274,7 @@ model Keuangan {
   buktiUrl      String?
   metode        String    @default("OFFLINE")
   periode       String?
+  bulanTagih    String?
   anggotaId     String?
   pengurusId    String?
   status        String    @default("DIVERIFIKASI")

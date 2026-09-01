@@ -6,16 +6,53 @@ import { FiSave } from "react-icons/fi";
 import ImageUploader from "@/components/admin/ImageUploader";
 import PasswordInput from "@/components/PasswordInput";
 
-type Profil = { name: string; nim: string; avatar: string | null };
+type Profil = {
+  name: string;
+  nim: string;
+  avatar: string | null;
+  prodi: string;
+  divisi: string;
+  jabatan: string;
+  noHp: string;
+  tanggalLahir: string;
+  periode: string;
+};
 
-export default function ProfilSayaForm({ initialData, isAdmin = false }: { initialData: Profil; isAdmin?: boolean }) {
+const EMPTY: Profil = {
+  name: "",
+  nim: "",
+  avatar: null,
+  prodi: "",
+  divisi: "",
+  jabatan: "",
+  noHp: "",
+  tanggalLahir: "",
+  periode: "",
+};
+
+export default function ProfilSayaForm({
+  initialData,
+  isAdmin = false,
+  tipeProfil = "ANGGOTA",
+}: {
+  initialData: Partial<Profil>;
+  isAdmin?: boolean;
+  tipeProfil?: "ADMIN" | "PENGURUS" | "ANGGOTA";
+}) {
   const router = useRouter();
-  const [form, setForm] = useState(initialData);
+  const [form, setForm] = useState<Profil>({ ...EMPTY, ...initialData });
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
+  const isMember = tipeProfil === "ANGGOTA" || tipeProfil === "PENGURUS";
+  const isPengurus = tipeProfil === "PENGURUS";
+
+  function set<K extends keyof Profil>(key: K, value: Profil[K]) {
+    setForm((current) => ({ ...current, [key]: value }));
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -36,13 +73,24 @@ export default function ProfilSayaForm({ initialData, isAdmin = false }: { initi
         body: JSON.stringify({
           name: form.name,
           avatar: form.avatar,
+          prodi: form.prodi,
+          divisi: form.divisi,
+          jabatan: form.jabatan,
+          noHp: form.noHp,
+          tanggalLahir: form.tanggalLahir,
+          periode: form.periode,
           ...(isAdmin ? { nim: form.nim, password } : {}),
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Gagal menyimpan profil");
 
-      setForm((current) => ({ ...current, ...data }));
+      setForm((current) => ({
+        ...current,
+        name: data.name ?? current.name,
+        nim: data.nim ?? current.nim,
+        avatar: data.avatar ?? current.avatar,
+      }));
       setPassword("");
       setPasswordConfirmation("");
       setMessage("Profil berhasil diperbarui.");
@@ -59,20 +107,61 @@ export default function ProfilSayaForm({ initialData, isAdmin = false }: { initi
       <ImageUploader
         label="Foto Profil"
         value={form.avatar || ""}
-        onChange={(avatar) => setForm((current) => ({ ...current, avatar }))}
+        onChange={(avatar) => set("avatar", avatar)}
         circular
       />
 
-      <div>
-        <label className="label" htmlFor="profil-name">Nama</label>
-        <input id="profil-name" className="input" value={form.name} onChange={(e) => setForm((current) => ({ ...current, name: e.target.value }))} required />
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label className="label" htmlFor="profil-name">Nama</label>
+          <input id="profil-name" className="input" value={form.name} onChange={(e) => set("name", e.target.value)} required />
+        </div>
+
+        <div>
+          <label className="label" htmlFor="profil-nim">NPM/NIM</label>
+          <input id="profil-nim" className={`input ${isAdmin ? "" : "bg-slate-100 dark:bg-white/5"}`} value={form.nim} onChange={(e) => set("nim", e.target.value)} disabled={!isAdmin} required />
+          <p className="mt-1 text-xs text-slate-500">{isAdmin ? "NPM/NIM digunakan untuk login." : "NPM/NIM tidak dapat diubah dari halaman profil."}</p>
+        </div>
       </div>
 
-      <div>
-        <label className="label" htmlFor="profil-nim">NPM/NIM</label>
-        <input id="profil-nim" className={`input ${isAdmin ? "" : "bg-slate-100 dark:bg-white/5"}`} value={form.nim} onChange={(e) => setForm((current) => ({ ...current, nim: e.target.value }))} disabled={!isAdmin} required />
-        <p className="mt-1 text-xs text-slate-500">{isAdmin ? "NPM/NIM digunakan untuk login." : "NPM/NIM tidak dapat diubah dari halaman profil."}</p>
-      </div>
+      {isMember && (
+        <>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className="label" htmlFor="profil-prodi">Program Studi / Jurusan</label>
+              <input id="profil-prodi" className="input" value={form.prodi} onChange={(e) => set("prodi", e.target.value)} placeholder="contoh: Teknik Informatika" />
+            </div>
+            <div>
+              <label className="label" htmlFor="profil-divisi">Divisi</label>
+              <input id="profil-divisi" className="input" value={form.divisi} onChange={(e) => set("divisi", e.target.value)} placeholder="contoh: Humas" />
+            </div>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            {isPengurus && (
+              <div>
+                <label className="label" htmlFor="profil-jabatan">Jabatan</label>
+                <input id="profil-jabatan" className="input" value={form.jabatan} onChange={(e) => set("jabatan", e.target.value)} placeholder="contoh: Ketua" />
+              </div>
+            )}
+            <div>
+              <label className="label" htmlFor="profil-nohp">No. HP / WhatsApp</label>
+              <input id="profil-nohp" className="input" value={form.noHp} onChange={(e) => set("noHp", e.target.value)} placeholder="contoh: 081234567890" />
+            </div>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className="label" htmlFor="profil-tgl">Tanggal Lahir</label>
+              <input id="profil-tgl" type="date" className="input" value={form.tanggalLahir} onChange={(e) => set("tanggalLahir", e.target.value)} />
+            </div>
+            <div>
+              <label className="label" htmlFor="profil-periode">Periode Kepengurusan</label>
+              <input id="profil-periode" className="input" value={form.periode} onChange={(e) => set("periode", e.target.value)} placeholder="contoh: 2026/2027" />
+            </div>
+          </div>
+        </>
+      )}
 
       {isAdmin && <>
         <div>
