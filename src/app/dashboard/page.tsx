@@ -3,6 +3,10 @@ import { auth } from "@/lib/auth";
 import Link from "next/link";
 import Image from "next/image";
 import { formatTanggal } from "@/lib/utils";
+import { getKapabilitas } from "@/lib/permissions";
+import { getPeriodeSekarang, hitungKasPeriodik, getDataUlangTahun } from "@/lib/kas";
+import KasNotifCard from "@/components/KasNotifCard";
+import BirthdayPanel from "@/components/BirthdayPanel";
 import {
   FiUsers,
   FiFileText,
@@ -85,6 +89,24 @@ export default async function DashboardHomePage() {
     }),
   ]);
 
+  let pengurusKas: null | { terbayar: number; sisa: number } = null;
+  let namaUser = namaPengguna;
+  const kap = await getKapabilitas();
+  const userId = (session?.user as any)?.id;
+  const dataUlang = await getDataUlangTahun();
+
+  if (userId && kap && !kap.isAdmin && !kap.isDPO) {
+    const pengurus = await prisma.pengurus.findUnique({ where: { userId } });
+    const anggota = await prisma.anggota.findUnique({ where: { userId } });
+    if (pengurus) {
+      namaUser = pengurus.nama || namaPengguna;
+      pengurusKas = await hitungKasPeriodik(null, pengurus.id, getPeriodeSekarang());
+    } else if (anggota) {
+      namaUser = anggota.nama || namaPengguna;
+      pengurusKas = await hitungKasPeriodik(anggota.id, null, getPeriodeSekarang());
+    }
+  }
+
   const stats = [
     {
       label: "Total Anggota",
@@ -144,13 +166,26 @@ export default async function DashboardHomePage() {
 
       <div>
         <h1 className="text-3xl font-bold text-primary dark:text-white">
-          {sapaan}, {namaPengguna}! 👋
+          {sapaan}, {namaUser}! 👋
         </h1>
 
         <p className="text-slate-500 mt-2">
           Selamat datang kembali di Dashboard UKM Olahraga.
         </p>
       </div>
+
+      {/* NOTIF KAS & ULANG TAHUN */}
+
+      {pengurusKas && (
+        <KasNotifCard
+          terbayar={pengurusKas.terbayar}
+          sisa={pengurusKas.sisa}
+          periode={getPeriodeSekarang()}
+          nama={namaUser}
+        />
+      )}
+
+      <BirthdayPanel orang={dataUlang} />
 
       {/* STATISTIK */}
 

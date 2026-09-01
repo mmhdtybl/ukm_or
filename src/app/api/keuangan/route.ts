@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { getKapabilitas } from "@/lib/permissions";
+import { getPeriodeSekarang } from "@/lib/kas";
 
 // GET: Bendahara/Ketua/Wakil/Admin melihat semua catatan keuangan.
 // Anggota biasa hanya melihat riwayat kas miliknya sendiri.
@@ -81,6 +82,7 @@ export async function POST(req: NextRequest) {
         keterangan: body.keterangan || null,
         buktiUrl: body.buktiUrl || null,
         metode: body.metode === "TRANSFER" ? "TRANSFER" : "OFFLINE",
+        periode: getPeriodeSekarang(),
         status: "PENDING",
         anggotaId: anggota?.id || null,
         pengurusId: pengurus?.id || null,

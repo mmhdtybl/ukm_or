@@ -49,6 +49,7 @@ model Anggota {
   user           User?            @relation(fields: [userId], references: [id])
   keuangan       Keuangan[]
   komentarBarang KomentarBarang[]
+  ucapan         Ucapan[]
 }
 
 model Pengurus {
@@ -75,6 +76,7 @@ model Pengurus {
   updatedAt    DateTime  @default(now()) @updatedAt
   user         User?     @relation(fields: [userId], references: [id])
   keuangan     Keuangan[]
+  ucapan       Ucapan[]
 }
 
 model KategoriBerita {
@@ -271,6 +273,7 @@ model Keuangan {
   keterangan    String?
   buktiUrl      String?
   metode        String    @default("OFFLINE")
+  periode       String?
   anggotaId     String?
   pengurusId    String?
   status        String    @default("DIVERIFIKASI")
@@ -328,4 +331,18 @@ model LinkWhatsApp {
   tahap     String   @unique
   link      String
   updatedAt DateTime @default(now()) @updatedAt
+}
+
+model Ucapan {
+  id        String    @id @default(cuid())
+  anggotaId String?
+  pengurusId String?
+  pengirim  String
+  pesan     String
+  createdAt DateTime  @default(now())
+  anggota   Anggota?  @relation(fields: [anggotaId], references: [id], onDelete: Cascade)
+  pengurus  Pengurus? @relation(fields: [pengurusId], references: [id], onDelete: Cascade)
+
+  @@index([anggotaId])
+  @@index([pengurusId])
 }
