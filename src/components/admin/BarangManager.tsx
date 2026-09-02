@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatTanggalWaktu } from "@/lib/utils";
 import DataTableActions from "./DataTableActions";
-import ExportCsvButton from "./ExportCsvButton";
+import ExportExcelButton from "./ExportExcelButton";
 import { FiCheck } from "react-icons/fi";
 import { DIVISI_OPTIONS } from "@/lib/divisi";
 
@@ -69,8 +69,8 @@ export default function BarangManager({ initialBarang, initialKomentar }: { init
         <div className="md:col-span-2 card overflow-x-auto">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold">Data Barang</h3>
-            <ExportCsvButton
-              filename="data-barang.csv"
+            <ExportExcelButton
+              filename="data-barang.xlsx"
               headers={CSV_HEADERS_BARANG}
               rows={rowsBarang(initialBarang)}
             />

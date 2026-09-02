@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatTanggalWaktu } from "@/lib/utils";
-import ExportCsvButton from "./ExportCsvButton";
+import ExportExcelButton from "./ExportExcelButton";
 
 const statusColor: Record<string, string> = {
   PENDING: "bg-orange-100 text-orange-600",
@@ -477,8 +477,8 @@ export default function PendaftaranManager({
             </p>
           </div>
 
-          <ExportCsvButton
-            filename="data-pendaftaran.csv"
+          <ExportExcelButton
+            filename="data-pendaftaran.xlsx"
             headers={["Nama", "NIM/Email", "WhatsApp", "Alamat", "Tahap", "Status", "Sumber", "Tanggal"]}
             rows={combinedData.map((item) => [
               item.nama || "",

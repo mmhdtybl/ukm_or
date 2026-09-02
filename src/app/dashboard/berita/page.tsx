@@ -5,7 +5,7 @@ import { formatTanggal } from "@/lib/utils";
 import { FiPlus } from "react-icons/fi";
 import { getKapabilitas } from "@/lib/permissions";
 import DataTableActions from "@/components/admin/DataTableActions";
-import ExportCsvButton from "@/components/admin/ExportCsvButton";
+import ExportExcelButton from "@/components/admin/ExportExcelButton";
 
 export const metadata = { title: "Kelola Berita" };
 
@@ -28,7 +28,7 @@ export default async function KelolaBeritaPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-primary dark:text-white">Kelola Berita</h1>
         <div className="flex items-center gap-2">
-          <ExportCsvButton filename="data-berita.csv" headers={["Judul", "Kategori", "Status", "Dilihat", "Tanggal"]} rows={csvRows} />
+          <ExportExcelButton filename="data-berita.xlsx" headers={["Judul", "Kategori", "Status", "Dilihat", "Tanggal"]} rows={csvRows} />
           <Link href="/dashboard/berita/baru" className="btn-primary !py-2 !px-4 text-sm"><FiPlus /> Tambah Berita</Link>
         </div>
       </div>

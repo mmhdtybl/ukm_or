@@ -5,7 +5,7 @@ import { formatTanggalWaktu } from "@/lib/utils";
 import { FiPlus, FiCamera } from "react-icons/fi";
 import { getKapabilitas } from "@/lib/permissions";
 import DataTableActions from "@/components/admin/DataTableActions";
-import ExportCsvButton from "@/components/admin/ExportCsvButton";
+import ExportExcelButton from "@/components/admin/ExportExcelButton";
 
 export const metadata = { title: "Kelola Agenda" };
 
@@ -31,7 +31,7 @@ export default async function KelolaAgendaPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-primary dark:text-white">Kelola Agenda</h1>
         <div className="flex items-center gap-2">
-          <ExportCsvButton filename="data-agenda.csv" headers={["Judul", "Lokasi", "Tanggal", "Status"]} rows={csvRows} />
+          <ExportExcelButton filename="data-agenda.xlsx" headers={["Judul", "Lokasi", "Tanggal", "Status"]} rows={csvRows} />
           <Link href="/dashboard/agenda/baru" className="btn-primary !py-2 !px-4 text-sm"><FiPlus /> Tambah Agenda</Link>
         </div>
       </div>

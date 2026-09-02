@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { FiEdit2, FiKey, FiPlus, FiTrash2 } from "react-icons/fi";
 import AnggotaManager from "./AnggotaManager";
 import PengurusManager from "./PengurusManager";
-import ExportCsvButton from "./ExportCsvButton";
+import ExportExcelButton from "./ExportExcelButton";
 import PasswordInput from "@/components/PasswordInput";
 
 type Target = { id: string; nama: string; nim?: string; jabatan?: string; userId?: string | null; user?: { id: string } | null };
@@ -83,7 +83,7 @@ export default function AkunManager({ anggota, pengurus }: { anggota: Target[]; 
         <div className="flex gap-2"><button disabled={loading} className="btn-primary">Simpan Kredensial</button><button type="button" onClick={() => { setEditing(null); setPassword(""); setNim(""); }} className="btn-outline">Batal</button></div>
       </form>}
     </div>
-    <div className="card overflow-x-auto"><div className="flex items-center justify-between mb-4"><h2 className="font-semibold">Daftar Akun</h2><ExportCsvButton filename="data-akun.csv" headers={["Nama", "Tipe", "NIM"]} rows={accounts.map((x: any) => [x.nama || "", x.tipe || "", x.user?.nim || ""])} /></div><table className="table-admin"><thead><tr><th>Nama</th><th>Tipe</th><th>NIM</th><th>Aksi</th></tr></thead><tbody>{accounts.map((item: any) => <tr key={item.user.id}><td>{item.nama}</td><td>{item.tipe}</td><td>{item.user.nim}</td><td className="flex gap-2"><button onClick={() => { setEditing(item); setPassword(""); setNim(item.user.nim); }} className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600"><FiEdit2 /> Ubah</button><button onClick={() => deleteAccount(item)} className="inline-flex items-center gap-1 text-xs font-semibold text-red-600"><FiTrash2 /> Hapus</button></td></tr>)}{accounts.length === 0 && <tr><td colSpan={4} className="py-6 text-center text-slate-400">Belum ada akun.</td></tr>}</tbody></table></div>
+    <div className="card overflow-x-auto"><div className="flex items-center justify-between mb-4"><h2 className="font-semibold">Daftar Akun</h2><ExportExcelButton filename="data-akun.xlsx" headers={["Nama", "Tipe", "NIM"]} rows={accounts.map((x: any) => [x.nama || "", x.tipe || "", x.user?.nim || ""])} /></div><table className="table-admin"><thead><tr><th>Nama</th><th>Tipe</th><th>NIM</th><th>Aksi</th></tr></thead><tbody>{accounts.map((item: any) => <tr key={item.user.id}><td>{item.nama}</td><td>{item.tipe}</td><td>{item.user.nim}</td><td className="flex gap-2"><button onClick={() => { setEditing(item); setPassword(""); setNim(item.user.nim); }} className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600"><FiEdit2 /> Ubah</button><button onClick={() => deleteAccount(item)} className="inline-flex items-center gap-1 text-xs font-semibold text-red-600"><FiTrash2 /> Hapus</button></td></tr>)}{accounts.length === 0 && <tr><td colSpan={4} className="py-6 text-center text-slate-400">Belum ada akun.</td></tr>}</tbody></table></div>
     </>}
   </div>;
 }

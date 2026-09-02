@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import DataTableActions from "./DataTableActions";
-import ExportCsvButton from "./ExportCsvButton";
+import ExportExcelButton from "./ExportExcelButton";
 import { FiEdit2, FiKey, FiPlus } from "react-icons/fi";
 import { DIVISI_OPTIONS } from "@/lib/divisi";
 
@@ -382,8 +382,8 @@ export default function AnggotaManager({
               Tambah Anggota
             </button>
           )}
-          <ExportCsvButton
-            filename="data-anggota.csv"
+          <ExportExcelButton
+            filename="data-anggota.xlsx"
             headers={CSV_HEADERS_ANGGOTA}
             rows={rowsAnggota(filtered)}
           />

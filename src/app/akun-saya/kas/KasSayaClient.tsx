@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatUang } from "@/lib/utils";
-import ExportCsvButton from "@/components/admin/ExportCsvButton";
+import ExportExcelButton from "@/components/admin/ExportExcelButton";
 
 type Metode = "OFFLINE" | "TRANSFER";
 
@@ -210,8 +210,8 @@ export default function KasSayaClient({
       <div className="card overflow-x-auto">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold">Tabel Kas Saya</h3>
-          <ExportCsvButton
-            filename="data-kas-saya.csv"
+          <ExportExcelButton
+            filename="data-kas-saya.xlsx"
             headers={["Bulan-Tahun", "Jumlah", "Metode", "Keterangan", "Status"]}
             rows={bulanKas.map((b) => [b.label, b.jumlah, b.metode || "", b.keterangan || "", b.lunas ? "Lunas" : "Belum"])}
           />

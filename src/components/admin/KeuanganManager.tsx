@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatTanggal, formatUang } from "@/lib/utils";
-import ExportCsvButton from "./ExportCsvButton";
+import ExportExcelButton from "./ExportExcelButton";
 import { FiCheck, FiX, FiTrash2, FiSave } from "react-icons/fi";
 
 const emptyForm = { jenis: "MASUK", kategori: "", jumlah: "", keterangan: "" };
@@ -111,8 +111,8 @@ export default function KeuanganManager({
             {["SEMUA", "PENDING", "DIVERIFIKASI", "DITOLAK"].map((f) => (
               <button key={f} onClick={() => setFilter(f)} className={`badge ${filter === f ? "bg-primary text-white" : "bg-surface-light dark:bg-white/10"}`}>{f}</button>
             ))}
-            <ExportCsvButton
-              filename="data-keuangan.csv"
+            <ExportExcelButton
+              filename="data-keuangan.xlsx"
               headers={["Tanggal", "Kategori", "Dari", "Metode", "Jenis", "Jumlah", "Status"]}
               rows={filtered.map((k) => [
                 formatTanggal(k.tanggal),

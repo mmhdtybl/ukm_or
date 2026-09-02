@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import ImageUploader from "./ImageUploader";
 import DataTableActions from "./DataTableActions";
-import ExportCsvButton from "./ExportCsvButton";
+import ExportExcelButton from "./ExportExcelButton";
 import { DIVISI_OPTIONS } from "@/lib/divisi";
 
 const CSV_HEADERS_PENGURUS = ["Nama", "NIM", "No HP", "Prodi", "Tanggal Lahir", "Alamat", "Jabatan", "Divisi/Kelompok", "Periode", "Status", "Akun"];
@@ -321,8 +321,8 @@ export default function PengurusManager({
             Menampilkan: <strong className="text-slate-800 dark:text-white">{filteredData.length}</strong> dari {initialData.length} Pengurus
           </div>
           <div className="flex items-center gap-2">
-            <ExportCsvButton
-              filename="data-pengurus.csv"
+            <ExportExcelButton
+              filename="data-pengurus.xlsx"
               headers={CSV_HEADERS_PENGURUS}
               rows={rowsPengurus(filteredData)}
             />

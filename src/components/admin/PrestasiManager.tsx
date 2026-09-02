@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import ImageUploader from "./ImageUploader";
 import DataTableActions from "./DataTableActions";
-import ExportCsvButton from "./ExportCsvButton";
+import ExportExcelButton from "./ExportExcelButton";
 
 const emptyForm = { judul: "", tingkat: "Kampus", peraih: "", penyelenggara: "", tahun: new Date().getFullYear(), gambar: "", keterangan: "" };
 
@@ -50,8 +50,8 @@ export default function PrestasiManager({ initialData }: { initialData: any[] })
       <div className="md:col-span-2 card overflow-x-auto">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold">Data Prestasi</h3>
-          <ExportCsvButton
-            filename="data-prestasi.csv"
+          <ExportExcelButton
+            filename="data-prestasi.xlsx"
             headers={CSV_HEADERS_PRESTASI}
             rows={initialData.map((p) => [p.judul || "", p.tingkat || "", p.peraih || "", p.penyelenggara || "", p.tahun ?? ""])}
           />
