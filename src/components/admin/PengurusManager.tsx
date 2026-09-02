@@ -4,7 +4,26 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import ImageUploader from "./ImageUploader";
 import DataTableActions from "./DataTableActions";
+import ExportCsvButton from "./ExportCsvButton";
 import { DIVISI_OPTIONS } from "@/lib/divisi";
+
+const CSV_HEADERS_PENGURUS = ["Nama", "NIM", "No HP", "Prodi", "Tanggal Lahir", "Alamat", "Jabatan", "Divisi/Kelompok", "Periode", "Status", "Akun"];
+
+function rowsPengurus(list: any[]) {
+  return list.map((p) => [
+    p.nama || "",
+    p.nim || "",
+    p.noHp || "",
+    p.prodi || "",
+    p.tanggalLahir ? new Date(p.tanggalLahir).toLocaleDateString("id-ID") : "",
+    p.alamat || "",
+    p.jabatan || "",
+    p.divisi || p.kelompok || "",
+    [p.periodeMulai, p.periodeAkhir].filter(Boolean).join(" - "),
+    p.isActive ? "Aktif" : "Non-Aktif",
+    p.userId ? "Ada" : "Belum",
+  ]);
+}
 
 const emptyForm = {
   id: "",
@@ -301,7 +320,13 @@ export default function PengurusManager({
           <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
             Menampilkan: <strong className="text-slate-800 dark:text-white">{filteredData.length}</strong> dari {initialData.length} Pengurus
           </div>
-          <button
+          <div className="flex items-center gap-2">
+            <ExportCsvButton
+              filename="data-pengurus.csv"
+              headers={CSV_HEADERS_PENGURUS}
+              rows={rowsPengurus(filteredData)}
+            />
+            <button
             type="button"
             onClick={() => {
               setForm(emptyForm);
@@ -312,7 +337,8 @@ export default function PengurusManager({
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
             Tambah Pengurus
-          </button>
+            </button>
+          </div>
         </div>
       </div>
 

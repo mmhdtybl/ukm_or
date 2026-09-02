@@ -4,8 +4,15 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatTanggalWaktu } from "@/lib/utils";
 import DataTableActions from "./DataTableActions";
+import ExportCsvButton from "./ExportCsvButton";
 import { FiCheck } from "react-icons/fi";
 import { DIVISI_OPTIONS } from "@/lib/divisi";
+
+const CSV_HEADERS_BARANG = ["Nama", "Divisi", "Jumlah", "Kondisi"];
+
+function rowsBarang(list: any[]) {
+  return list.map((b) => [b.nama || "", b.divisi || "", b.jumlah ?? "", b.kondisi || ""]);
+}
 
 const DIVISI_OPTIONS_BARANG = ["Umum", ...DIVISI_OPTIONS];
 const emptyForm = { id: "", nama: "", divisi: "Umum", jumlah: 1, kondisi: "Baik", keterangan: "" };
@@ -60,6 +67,14 @@ export default function BarangManager({ initialBarang, initialKomentar }: { init
         </form>
 
         <div className="md:col-span-2 card overflow-x-auto">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">Data Barang</h3>
+            <ExportCsvButton
+              filename="data-barang.csv"
+              headers={CSV_HEADERS_BARANG}
+              rows={rowsBarang(initialBarang)}
+            />
+          </div>
           <table className="table-admin">
             <thead><tr><th>Nama</th><th>Divisi</th><th>Jumlah</th><th>Kondisi</th><th>Aksi</th></tr></thead>
             <tbody>

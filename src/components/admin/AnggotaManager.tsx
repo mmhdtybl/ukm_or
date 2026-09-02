@@ -3,8 +3,27 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import DataTableActions from "./DataTableActions";
+import ExportCsvButton from "./ExportCsvButton";
 import { FiEdit2, FiKey, FiPlus } from "react-icons/fi";
 import { DIVISI_OPTIONS } from "@/lib/divisi";
+
+const CSV_HEADERS_ANGGOTA = ["Nama", "NIM", "No HP", "Prodi", "Jabatan", "Alamat", "Tanggal Lahir", "Divisi", "Periode", "Status", "Akun"];
+
+function rowsAnggota(list: any[]) {
+  return list.map((a) => [
+    a.nama || "",
+    a.nim || "",
+    a.noHp || "",
+    a.prodi || "",
+    a.jabatan || "",
+    a.alamat || "",
+    a.tanggalLahir ? new Date(a.tanggalLahir).toLocaleDateString("id-ID") : "",
+    a.divisi || "",
+    a.periode || "",
+    a.status || "",
+    a.userId ? "Ada" : "Belum",
+  ]);
+}
 
 const emptyForm = {
   id: "",
@@ -346,22 +365,29 @@ export default function AnggotaManager({
           onChange={(e) => setQ(e.target.value)}
         />
 
-        {!readOnly && (
-          <button
-            onClick={() => {
-              setForm({
-                ...emptyForm,
-                divisi: divisiLock || "",
-              });
+        <div className="flex flex-wrap items-center gap-2">
+          {!readOnly && (
+            <button
+              onClick={() => {
+                setForm({
+                  ...emptyForm,
+                  divisi: divisiLock || "",
+                });
 
-              setShowForm(!showForm);
-            }}
-            className="btn-primary !py-2 !px-4 text-sm w-fit flex items-center gap-2"
-          >
-            <FiPlus />
-            Tambah Anggota
-          </button>
-        )}
+                setShowForm(!showForm);
+              }}
+              className="btn-primary !py-2 !px-4 text-sm w-fit flex items-center gap-2"
+            >
+              <FiPlus />
+              Tambah Anggota
+            </button>
+          )}
+          <ExportCsvButton
+            filename="data-anggota.csv"
+            headers={CSV_HEADERS_ANGGOTA}
+            rows={rowsAnggota(filtered)}
+          />
+        </div>
       </div>
 
       {/* =====================================================

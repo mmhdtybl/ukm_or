@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatTanggalWaktu } from "@/lib/utils";
+import ExportCsvButton from "./ExportCsvButton";
 
 const statusColor: Record<string, string> = {
   PENDING: "bg-orange-100 text-orange-600",
@@ -463,16 +464,33 @@ export default function PendaftaranManager({
 
       <div className="card overflow-x-auto">
 
-        <div className="mb-4">
-          <h2 className="font-semibold text-lg">
-            Data Pendaftaran
-          </h2>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="font-semibold text-lg">
+              Data Pendaftaran
+            </h2>
 
-          <p className="text-sm text-slate-500 mt-1">
-            Semua permintaan pendaftaran dan
-            permintaan Google ditampilkan dalam
-            satu tabel.
-          </p>
+            <p className="text-sm text-slate-500 mt-1">
+              Semua permintaan pendaftaran dan
+              permintaan Google ditampilkan dalam
+              satu tabel.
+            </p>
+          </div>
+
+          <ExportCsvButton
+            filename="data-pendaftaran.csv"
+            headers={["Nama", "NIM/Email", "WhatsApp", "Alamat", "Tahap", "Status", "Sumber", "Tanggal"]}
+            rows={combinedData.map((item) => [
+              item.nama || "",
+              item.nim || item.email || "",
+              item.noHp || "",
+              item.alamat || "",
+              item.tahap ? tahapLabel[item.tahap] || item.tahap : "",
+              item.status || "",
+              item.sumber || "",
+              item.createdAt ? formatTanggalWaktu(item.createdAt) : "",
+            ])}
+          />
         </div>
 
         <table className="table-admin">

@@ -3,9 +3,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatTanggal, formatUang } from "@/lib/utils";
+import ExportCsvButton from "./ExportCsvButton";
 import { FiCheck, FiX, FiTrash2, FiSave } from "react-icons/fi";
 
 const emptyForm = { jenis: "MASUK", kategori: "", jumlah: "", keterangan: "" };
+
+function namaDari(k: any) {
+  if (k?.anggota) return `${k.anggota.nama} (${k.anggota.nim})`;
+  if (k?.pengurus) return `${k.pengurus.nama} (Pengurus)`;
+  return k?.dicatatOleh?.name || "";
+}
 
 export default function KeuanganManager({
   initialData, saldo, totalMasuk, totalKeluar, tujuan,
@@ -100,10 +107,23 @@ export default function KeuanganManager({
         </form>
 
         <div className="md:col-span-2">
-          <div className="flex gap-2 mb-4">
+          <div className="flex flex-wrap items-center gap-2 mb-4">
             {["SEMUA", "PENDING", "DIVERIFIKASI", "DITOLAK"].map((f) => (
               <button key={f} onClick={() => setFilter(f)} className={`badge ${filter === f ? "bg-primary text-white" : "bg-surface-light dark:bg-white/10"}`}>{f}</button>
             ))}
+            <ExportCsvButton
+              filename="data-keuangan.csv"
+              headers={["Tanggal", "Kategori", "Dari", "Metode", "Jenis", "Jumlah", "Status"]}
+              rows={filtered.map((k) => [
+                formatTanggal(k.tanggal),
+                k.kategori || "",
+                namaDari(k),
+                k.metode === "TRANSFER" ? "Transfer" : "Offline",
+                k.jenis || "",
+                k.jumlah ?? "",
+                k.status || "",
+              ])}
+            />
           </div>
           <div className="card overflow-x-auto">
             <table className="table-admin">

@@ -4,8 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import ImageUploader from "./ImageUploader";
 import DataTableActions from "./DataTableActions";
+import ExportCsvButton from "./ExportCsvButton";
 
 const emptyForm = { judul: "", tingkat: "Kampus", peraih: "", penyelenggara: "", tahun: new Date().getFullYear(), gambar: "", keterangan: "" };
+
+const CSV_HEADERS_PRESTASI = ["Judul", "Tingkat", "Peraih", "Penyelenggara", "Tahun"];
 
 export default function PrestasiManager({ initialData }: { initialData: any[] }) {
   const router = useRouter();
@@ -45,6 +48,14 @@ export default function PrestasiManager({ initialData }: { initialData: any[] })
       </form>
 
       <div className="md:col-span-2 card overflow-x-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold">Data Prestasi</h3>
+          <ExportCsvButton
+            filename="data-prestasi.csv"
+            headers={CSV_HEADERS_PRESTASI}
+            rows={initialData.map((p) => [p.judul || "", p.tingkat || "", p.peraih || "", p.penyelenggara || "", p.tahun ?? ""])}
+          />
+        </div>
         <table className="table-admin">
           <thead><tr><th>Judul</th><th>Tingkat</th><th>Peraih</th><th>Tahun</th><th>Aksi</th></tr></thead>
           <tbody>
