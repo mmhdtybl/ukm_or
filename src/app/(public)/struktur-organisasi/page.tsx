@@ -132,7 +132,8 @@ export default async function StrukturPage() {
       foto: p.user?.avatar || p.foto,
       crown:
         p.kodeJabatan === "KETUA_UMUM" ||
-        p.kodeJabatan.startsWith("BIDANG_") ||
+        (p.kodeJabatan.startsWith("BIDANG_") &&
+          !p.kodeJabatan.endsWith("_STAFF")) ||
         p.kodeJabatan === "KADIV",
     }));
 
