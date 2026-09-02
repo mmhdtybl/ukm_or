@@ -342,3 +342,15 @@ a {
 }
 .anim-twinkle { animation: twinkle 2.4s ease-in-out infinite; }
 .anim-ring-pulse { animation: ringPulse 2.2s ease-in-out infinite; }
+.anim-crown-float { animation: crownFloat 2.6s ease-in-out infinite; }
+.anim-crown-glow { animation: crownGlow 2.6s ease-in-out infinite; }
+
+@keyframes crownFloat {
+  0%, 100% { transform: translateY(0) rotate(-7deg); }
+  50% { transform: translateY(-7px) rotate(7deg); }
+}
+
+@keyframes crownGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.55); }
+  50% { box-shadow: 0 0 0 6px rgba(250, 204, 21, 0); }
+}
