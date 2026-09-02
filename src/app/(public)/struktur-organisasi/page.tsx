@@ -12,15 +12,16 @@ type Person = {
   jabatan: string;
   divisi?: string | null;
   foto?: string | null;
+  crown?: boolean;
 };
 
-function KartuOrang({ person, crown }: { person: Person; crown?: boolean }) {
+function KartuOrang({ person }: { person: Person }) {
   return (
     <article className="group relative overflow-hidden rounded-3xl border border-slate-200/70 bg-white p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl dark:border-slate-700 dark:bg-slate-800">
       <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-400 opacity-90" />
 
       <div className="relative mx-auto mt-3 mb-5 h-28 w-28">
-        {crown && (
+        {person.crown && (
           <div className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2">
             <div className="anim-crown-float">
               <span className="anim-crown-glow grid h-10 w-10 place-items-center rounded-full bg-white shadow-lg ring-2 ring-yellow-400 dark:bg-slate-800 dark:ring-yellow-500/80">
@@ -30,7 +31,7 @@ function KartuOrang({ person, crown }: { person: Person; crown?: boolean }) {
           </div>
         )}
 
-        <div className="h-28 w-28 overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-lg dark:border-slate-800 dark:bg-slate-700">
+        <div className="relative h-28 w-28 overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-lg dark:border-slate-800 dark:bg-slate-700">
           {person.foto ? (
             <Image
               src={person.foto}
@@ -67,11 +68,9 @@ function KartuOrang({ person, crown }: { person: Person; crown?: boolean }) {
 function Seksi({
   title,
   people,
-  crown,
 }: {
   title: string;
   people: Person[];
-  crown?: boolean;
 }) {
   if (!people.length) return null;
 
@@ -92,7 +91,7 @@ function Seksi({
 
       <div className="grid grid-cols-2 gap-5 md:grid-cols-3 xl:grid-cols-4">
         {people.map((person) => (
-          <KartuOrang key={person.id} person={person} crown={crown} />
+          <KartuOrang key={person.id} person={person} />
         ))}
       </div>
     </section>
@@ -131,6 +130,10 @@ export default async function StrukturPage() {
       jabatan: p.jabatan,
       divisi: p.divisi,
       foto: p.user?.avatar || p.foto,
+      crown:
+        p.kodeJabatan === "KETUA_UMUM" ||
+        p.kodeJabatan.startsWith("BIDANG_") ||
+        p.kodeJabatan === "KADIV",
     }));
 
   const personAnggota = (list: typeof anggota): Person[] =>
@@ -252,7 +255,6 @@ export default async function StrukturPage() {
               <div className="space-y-10">
                 <Seksi
                   title="Kepala Divisi"
-                  crown
                   people={personPengurus(
                     kadiv.filter((p) => p.divisi === divisi)
                   )}
