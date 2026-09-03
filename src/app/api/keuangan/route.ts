@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
         keterangan: body.keterangan || null,
         buktiUrl: body.buktiUrl || null,
         status: "DIVERIFIKASI",
-        tipe: "UMUM",
+        tipe: body.tipe === "KAS" ? "KAS" : "UMUM",
         dicatatOlehId: (session.user as any).id,
         tanggal: body.tanggal ? new Date(body.tanggal) : new Date(),
       },

@@ -6,7 +6,7 @@ import { formatTanggal, formatUang } from "@/lib/utils";
 import ExportExcelButton from "./ExportExcelButton";
 import { FiTrash2 } from "react-icons/fi";
 
-const emptyForm = { jenis: "MASUK", kategori: "", jumlah: "", keterangan: "" };
+const emptyForm = { jenis: "MASUK", kategori: "", jumlah: "", keterangan: "", tipe: "UMUM" };
 
 function namaDari(k: any) {
   if (k?.anggota) return `${k.anggota.nama} (${k.anggota.nim})`;
@@ -56,6 +56,13 @@ export default function KeuanganManager({
           <select className="input" value={form.jenis} onChange={(e) => setForm({ ...form, jenis: e.target.value })}>
             <option value="MASUK">Pemasukan</option>
             <option value="KELUAR">Pengeluaran</option>
+          </select>
+        </div>
+        <div>
+          <label className="label">Sumber</label>
+          <select className="input" value={form.tipe} onChange={(e) => setForm({ ...form, tipe: e.target.value })}>
+            <option value="UMUM">Pemasukan Lain</option>
+            <option value="KAS">Kas</option>
           </select>
         </div>
         <div><label className="label">Kategori</label><input required className="input" value={form.kategori} onChange={(e) => setForm({ ...form, kategori: e.target.value })} placeholder="Sponsor, Perlengkapan, Konsumsi, dll" /></div>
