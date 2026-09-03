@@ -12,8 +12,8 @@ export default async function KelolaKeuanganPage() {
 
   const keuangan = await prisma.keuangan.findMany({
     include: {
-      anggota: { select: { nama: true, nim: true } },
-      pengurus: { select: { nama: true, nim: true } },
+      anggota: { select: { nama: true, nim: true, divisi: true } },
+      pengurus: { select: { nama: true, nim: true, divisi: true } },
       dicatatOleh: { select: { name: true } },
     },
     orderBy: { tanggal: "desc" },

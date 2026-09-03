@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { formatTanggal, formatUang } from "@/lib/utils";
 import ExportExcelButton from "./ExportExcelButton";
 import { FiCheck, FiX, FiTrash2, FiSave } from "react-icons/fi";
+import { CABOR_OPTIONS } from "@/lib/divisi";
 
 const emptyForm = { jenis: "MASUK", kategori: "", jumlah: "", keterangan: "" };
 
@@ -14,6 +15,12 @@ function namaDari(k: any) {
   return k?.dicatatOleh?.name || "";
 }
 
+function divisiDari(k: any): string {
+  if (k?.anggota?.divisi) return k.anggota.divisi;
+  if (k?.pengurus?.divisi) return k.pengurus.divisi;
+  return "";
+}
+
 export default function KeuanganManager({
   initialData, saldo, totalMasuk, totalKeluar, tujuan,
 }: { initialData: any[]; saldo: number; totalMasuk: number; totalKeluar: number; tujuan: string | null }) {
@@ -21,6 +28,7 @@ export default function KeuanganManager({
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState("SEMUA");
+  const [divisiFilter, setDivisiFilter] = useState("SEMUA");
   const [tujuanInput, setTujuanInput] = useState(tujuan || "");
   const [savingTujuan, setSavingTujuan] = useState(false);
 
@@ -64,7 +72,15 @@ export default function KeuanganManager({
     router.refresh();
   }
 
-  const filtered = filter === "SEMUA" ? initialData : initialData.filter((k) => k.status === filter);
+  const filtered = initialData.filter((k) => {
+    if (filter !== "SEMUA" && k.status !== filter) return false;
+    if (divisiFilter !== "SEMUA") {
+      const d = divisiDari(k);
+      if (divisiFilter === "TANPA_DIVISI") return !d;
+      return d === divisiFilter;
+    }
+    return true;
+  });
 
   return (
     <div>
@@ -107,15 +123,33 @@ export default function KeuanganManager({
         </form>
 
         <div className="md:col-span-2">
-          <div className="flex flex-wrap items-center gap-2 mb-4">
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <select
+              value={divisiFilter}
+              onChange={(e) => setDivisiFilter(e.target.value)}
+              className="input !w-auto !py-1.5 text-sm"
+            >
+              <option value="SEMUA">Semua Divisi</option>
+              {CABOR_OPTIONS.map((d) => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+              <option value="TANPA_DIVISI">Tanpa Divisi</option>
+            </select>
+
+            <span className="h-5 w-px bg-slate-200 dark:bg-slate-700" />
+
             {["SEMUA", "PENDING", "DIVERIFIKASI", "DITOLAK"].map((f) => (
               <button key={f} onClick={() => setFilter(f)} className={`badge ${filter === f ? "bg-primary text-white" : "bg-surface-light dark:bg-white/10"}`}>{f}</button>
             ))}
+
+            <span className="flex-1" />
+
             <ExportExcelButton
               filename="data-keuangan.xlsx"
-              headers={["Tanggal", "Kategori", "Dari", "Metode", "Jenis", "Jumlah", "Status"]}
+              headers={["Tanggal", "Divisi", "Kategori", "Dari", "Metode", "Jenis", "Jumlah", "Status"]}
               rows={filtered.map((k) => [
                 formatTanggal(k.tanggal),
+                divisiDari(k) || "-",
                 k.kategori || "",
                 namaDari(k),
                 k.metode === "TRANSFER" ? "Transfer" : "Offline",
@@ -127,11 +161,12 @@ export default function KeuanganManager({
           </div>
           <div className="card overflow-x-auto">
             <table className="table-admin">
-              <thead><tr><th>Tanggal</th><th>Kategori</th><th>Dari</th><th>Metode</th><th>Jenis</th><th>Jumlah</th><th>Status</th><th>Aksi</th></tr></thead>
+              <thead><tr><th>Tanggal</th><th>Divisi</th><th>Kategori</th><th>Dari</th><th>Metode</th><th>Jenis</th><th>Jumlah</th><th>Status</th><th>Aksi</th></tr></thead>
               <tbody>
                 {filtered.map((k) => (
                   <tr key={k.id}>
                     <td>{formatTanggal(k.tanggal)}</td>
+                    <td>{divisiDari(k) ? <span className="badge bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">{divisiDari(k)}</span> : <span className="text-slate-400">-</span>}</td>
                     <td>{k.kategori}</td>
                     <td>{k.anggota ? `${k.anggota.nama} (${k.anggota.nim})` : k.pengurus ? `${k.pengurus.nama} (Pengurus)` : k.dicatatOleh?.name || "-"}</td>
                     <td><span className="text-xs font-medium uppercase text-slate-500 dark:text-slate-400">{k.metode === "TRANSFER" ? "Transfer" : "Offline"}</span></td>
@@ -153,7 +188,7 @@ export default function KeuanganManager({
                     </td>
                   </tr>
                 ))}
-                {filtered.length === 0 && <tr><td colSpan={8} className="text-center text-slate-400 py-6">Tidak ada data.</td></tr>}
+                {filtered.length === 0 && <tr><td colSpan={9} className="text-center text-slate-400 py-6">Tidak ada data.</td></tr>}
               </tbody>
             </table>
           </div>

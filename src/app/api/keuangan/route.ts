@@ -14,8 +14,8 @@ export async function GET() {
   if (kap.canManageKeuangan) {
     const list = await prisma.keuangan.findMany({
       include: {
-        anggota: { select: { nama: true, nim: true } },
-        pengurus: { select: { nama: true, nim: true } },
+        anggota: { select: { nama: true, nim: true, divisi: true } },
+        pengurus: { select: { nama: true, nim: true, divisi: true } },
         dicatatOleh: { select: { name: true } },
       },
       orderBy: { tanggal: "desc" },
