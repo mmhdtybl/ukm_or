@@ -278,6 +278,7 @@ model Keuangan {
   anggotaId     String?
   pengurusId    String?
   status        String    @default("DIVERIFIKASI")
+  tipe          String    @default("UMUM")
   dicatatOlehId String?
   tanggal       DateTime  @default(now())
   createdAt     DateTime  @default(now())

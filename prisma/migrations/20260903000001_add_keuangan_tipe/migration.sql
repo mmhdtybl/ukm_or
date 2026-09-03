@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Keuangan" ADD COLUMN "tipe" TEXT NOT NULL DEFAULT 'UMUM';

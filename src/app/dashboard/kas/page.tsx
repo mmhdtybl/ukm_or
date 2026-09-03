@@ -11,6 +11,7 @@ export default async function KelolaKasPage() {
   if (!kap?.canManageKeuangan) redirect("/dashboard");
 
   const keuangan = await prisma.keuangan.findMany({
+    where: { tipe: "KAS" },
     include: {
       anggota: { select: { nama: true, nim: true, divisi: true } },
       pengurus: { select: { nama: true, nim: true, divisi: true } },

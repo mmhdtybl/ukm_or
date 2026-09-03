@@ -62,9 +62,10 @@ export default function KeuanganManager({
           <span className="flex-1" />
           <ExportExcelButton
             filename="data-keuangan.xlsx"
-            headers={["Tanggal", "Kategori", "Dari", "Metode", "Jenis", "Jumlah", "Status"]}
+            headers={["Tanggal", "Sumber", "Kategori", "Dari", "Metode", "Jenis", "Jumlah", "Status"]}
             rows={initialData.map((k) => [
               formatTanggal(k.tanggal),
+              k.tipe === "KAS" ? "Kas" : "Pemasukan Lain",
               k.kategori || "",
               namaDari(k),
               k.metode === "TRANSFER" ? "Transfer" : "Offline",
@@ -76,11 +77,12 @@ export default function KeuanganManager({
         </div>
         <div className="card overflow-x-auto">
           <table className="table-admin">
-            <thead><tr><th>Tanggal</th><th>Kategori</th><th>Dari</th><th>Metode</th><th>Jenis</th><th>Jumlah</th><th>Status</th><th>Aksi</th></tr></thead>
+            <thead><tr><th>Tanggal</th><th>Sumber</th><th>Kategori</th><th>Dari</th><th>Metode</th><th>Jenis</th><th>Jumlah</th><th>Status</th><th>Aksi</th></tr></thead>
             <tbody>
               {initialData.map((k) => (
                 <tr key={k.id}>
                   <td>{formatTanggal(k.tanggal)}</td>
+                  <td>{k.tipe === "KAS" ? <span className="badge bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">Kas</span> : <span className="badge bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">Pemasukan Lain</span>}</td>
                   <td>{k.kategori}</td>
                   <td>{k.anggota ? `${k.anggota.nama} (${k.anggota.nim})` : k.pengurus ? `${k.pengurus.nama} (Pengurus)` : k.dicatatOleh?.name || "-"}</td>
                   <td><span className="text-xs font-medium uppercase text-slate-500 dark:text-slate-400">{k.metode === "TRANSFER" ? "Transfer" : "Offline"}</span></td>
@@ -96,7 +98,7 @@ export default function KeuanganManager({
                   </td>
                 </tr>
               ))}
-              {initialData.length === 0 && <tr><td colSpan={8} className="text-center text-slate-400 py-6">Tidak ada data.</td></tr>}
+              {initialData.length === 0 && <tr><td colSpan={9} className="text-center text-slate-400 py-6">Tidak ada data.</td></tr>}
             </tbody>
           </table>
         </div>
