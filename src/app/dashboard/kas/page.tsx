@@ -1,0 +1,40 @@
+import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
+import { getKapabilitas } from "@/lib/permissions";
+import { getKasConfig } from "@/lib/kas-config";
+import KasManager from "@/components/admin/KasManager";
+
+export const metadata = { title: "Kelola Kas" };
+
+export default async function KelolaKasPage() {
+  const kap = await getKapabilitas();
+  if (!kap?.canManageKeuangan) redirect("/dashboard");
+
+  const keuangan = await prisma.keuangan.findMany({
+    include: {
+      anggota: { select: { nama: true, nim: true, divisi: true } },
+      pengurus: { select: { nama: true, nim: true, divisi: true } },
+      dicatatOleh: { select: { name: true } },
+    },
+    orderBy: { tanggal: "desc" },
+  });
+
+  const totalMasuk = keuangan.filter((k) => k.jenis === "MASUK" && k.status === "DIVERIFIKASI").reduce((s, k) => s + k.jumlah, 0);
+  const totalKeluar = keuangan.filter((k) => k.jenis === "KELUAR" && k.status === "DIVERIFIKASI").reduce((s, k) => s + k.jumlah, 0);
+
+  const konfigurasi = await getKasConfig();
+
+  return (
+    <div>
+      <h1 className="text-2xl font-bold text-primary dark:text-white mb-1">Kelola Kas</h1>
+      <p className="text-slate-500 mb-6">Kelola kas anggota dan verifikasi laporan pembayaran kas dari tiap divisi.</p>
+      <KasManager
+        initialData={JSON.parse(JSON.stringify(keuangan))}
+        saldo={totalMasuk - totalKeluar}
+        totalMasuk={totalMasuk}
+        totalKeluar={totalKeluar}
+        tujuan={konfigurasi?.tujuan || null}
+      />
+    </div>
+  );
+}

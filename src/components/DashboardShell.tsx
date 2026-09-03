@@ -21,6 +21,7 @@ import {
   FiCamera,
   FiArchive,
   FiDollarSign,
+  FiTrendingUp,
   FiBox,
   FiEye,
   FiMessageSquare,
@@ -146,9 +147,16 @@ export default function DashboardShell({
     },
 
     {
-      href: "/dashboard/keuangan",
-      label: "Kelola Kas & Keuangan",
+      href: "/dashboard/kas",
+      label: "Kelola Kas",
       icon: FiDollarSign,
+      show: kap.canManageKeuangan,
+    },
+
+    {
+      href: "/dashboard/keuangan",
+      label: "Kelola Keuangan",
+      icon: FiTrendingUp,
       show: kap.canManageKeuangan,
     },
 
