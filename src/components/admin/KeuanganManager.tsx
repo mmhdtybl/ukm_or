@@ -15,8 +15,8 @@ function namaDari(k: any) {
 }
 
 export default function KeuanganManager({
-  initialData,
-}: { initialData: any[] }) {
+  initialData, saldo, totalMasuk, totalKeluar,
+}: { initialData: any[]; saldo: number; totalMasuk: number; totalKeluar: number }) {
   const router = useRouter();
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
@@ -41,7 +41,14 @@ export default function KeuanganManager({
   }
 
   return (
-    <div className="grid md:grid-cols-3 gap-6">
+    <div>
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="card text-center"><div className="text-xl font-bold text-primary dark:text-white">{formatUang(saldo)}</div><div className="text-xs text-slate-500">Saldo</div></div>
+        <div className="card text-center"><div className="text-xl font-bold text-green-600">{formatUang(totalMasuk)}</div><div className="text-xs text-slate-500">Uang Masuk</div></div>
+        <div className="card text-center"><div className="text-xl font-bold text-red-500">{formatUang(totalKeluar)}</div><div className="text-xs text-slate-500">Uang Keluar</div></div>
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-6">
       <form onSubmit={handleSubmit} className="card space-y-4 h-fit">
         <h3 className="font-semibold">Catat Transaksi</h3>
         <div>
@@ -102,6 +109,7 @@ export default function KeuanganManager({
             </tbody>
           </table>
         </div>
+      </div>
       </div>
     </div>
   );

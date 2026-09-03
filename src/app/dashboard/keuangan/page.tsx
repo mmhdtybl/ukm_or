@@ -18,12 +18,18 @@ export default async function KelolaKeuanganPage() {
     orderBy: { tanggal: "desc" },
   });
 
+  const totalMasuk = keuangan.filter((k) => k.jenis === "MASUK" && k.status === "DIVERIFIKASI").reduce((s, k) => s + k.jumlah, 0);
+  const totalKeluar = keuangan.filter((k) => k.jenis === "KELUAR" && k.status === "DIVERIFIKASI").reduce((s, k) => s + k.jumlah, 0);
+
   return (
     <div>
       <h1 className="text-2xl font-bold text-primary dark:text-white mb-1">Kelola Keuangan</h1>
       <p className="text-slate-500 mb-6">Catat pemasukan dan pengeluaran keuangan organisasi.</p>
       <KeuanganManager
         initialData={JSON.parse(JSON.stringify(keuangan))}
+        totalMasuk={totalMasuk}
+        totalKeluar={totalKeluar}
+        saldo={totalMasuk - totalKeluar}
       />
     </div>
   );
