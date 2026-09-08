@@ -7,10 +7,12 @@ export default withAuth(
     const path = req.nextUrl.pathname;
     const role = token?.role;
 
-    // Pengguna yang masih memiliki sesi tidak perlu melihat halaman login lagi.
-    // Mereka hanya dapat kembali ke sana setelah sesi diakhiri melalui tombol Keluar.
-    if (path === "/login" && role) {
-      return NextResponse.redirect(new URL(role === "ANGGOTA" ? "/akun-saya" : "/dashboard", req.url));
+    const halamanUtamaMenu = role === "ANGGOTA" ? "/akun-saya" : "/dashboard";
+
+    // Pengguna yang sudah login langsung diarahkan ke dashboard
+    // dari halaman utama (/) maupun halaman login.
+    if (role && (path === "/login" || path === "/")) {
+      return NextResponse.redirect(new URL(halamanUtamaMenu, req.url));
     }
 
     // Area /dashboard hanya untuk ADMIN & PENGURUS
@@ -34,12 +36,12 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ token }) => !!token,
+      authorized: () => true,
     },
     pages: { signIn: "/login" },
   }
 );
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/akun-saya/:path*", "/login"],
+  matcher: ["/dashboard/:path*", "/akun-saya/:path*", "/login", "/"],
 };
