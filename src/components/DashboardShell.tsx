@@ -420,6 +420,8 @@ export default function DashboardShell({
               h-24
               shrink-0
               items-center
+              justify-between
+              gap-2
               px-5
 
               border-b
@@ -432,6 +434,7 @@ export default function DashboardShell({
               className="
                 group
                 flex
+                min-w-0
                 items-center
                 gap-3
               "
@@ -489,12 +492,16 @@ export default function DashboardShell({
                 >
                   Dashboard
                 </p>
-              </div>
+</div>
             </Link>
+
+            <div className="shrink-0">
+              <NotificationBell />
+            </div>
           </div>
 
           {/* =================================================
-              VIEW ONLY
+              MENU
           ================================================= */}
 
           {kap.viewOnly && (
@@ -701,10 +708,6 @@ export default function DashboardShell({
                   <FiSettings size={14} />
                   Profil
                 </Link>
-
-                <div className="shrink-0">
-                  <NotificationBell />
-                </div>
 
                 <button
                   onClick={() =>
