@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import PasswordInput from "@/components/PasswordInput";
@@ -9,6 +9,16 @@ export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Jika sudah login, langsung arahkan ke dashboard/akun
+  useEffect(() => {
+    getSession().then((session) => {
+      if (session?.user) {
+        const role = (session.user as any)?.role;
+        router.replace(role === "ANGGOTA" ? "/akun-saya" : "/dashboard");
+      }
+    });
+  }, [router]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
