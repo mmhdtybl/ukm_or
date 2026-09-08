@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { kirimPush, kirimPushBroadcast } from "@/lib/push";
 
 export type TipeNotifikasi = "KAS" | "PRESENSI" | "BERITA" | "AGENDA";
 
@@ -9,7 +10,16 @@ export async function kirimNotifikasi(data: {
   pesan: string;
   link?: string;
 }) {
-  return prisma.notifikasi.create({ data });
+  const notif = await prisma.notifikasi.create({ data });
+
+  // Kirim juga push ke HP (jika pengguna sudah izinkan + subscribe)
+  kirimPush(data.userId, {
+    title: data.judul,
+    body: data.pesan,
+    link: data.link || "/",
+  }).catch(() => {});
+
+  return notif;
 }
 
 export async function kirimNotifikasiBroadcast(data: {
@@ -22,9 +32,16 @@ export async function kirimNotifikasiBroadcast(data: {
     where: { isActive: true },
     select: { id: true },
   });
-  if (users.length === 0) return;
+  if (users.length > 0) {
+    await prisma.notifikasi.createMany({
+      data: users.map((u) => ({ userId: u.id, ...data })),
+    });
+  }
 
-  await prisma.notifikasi.createMany({
-    data: users.map((u) => ({ userId: u.id, ...data })),
-  });
+  // Push broadcast ke HP semua subscriber
+  kirimPushBroadcast({
+    title: data.judul,
+    body: data.pesan,
+    link: data.link || "/",
+  }).catch(() => {});
 }

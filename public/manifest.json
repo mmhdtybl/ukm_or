@@ -1,0 +1,21 @@
+{
+  "name": "UKM Olahraga",
+  "short_name": "UKM Olahraga",
+  "description": "Website resmi Unit Kegiatan Mahasiswa Olahraga",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0071E3",
+  "icons": [
+    {
+      "src": "/branding/logo-ukm.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/branding/logo-ukm.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

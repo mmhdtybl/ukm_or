@@ -28,6 +28,7 @@ model User {
   pengurus         Pengurus?
   presensiDiunggah PresensiFoto[]
   notifikasi       Notifikasi[]
+  pushSubscriptions PushSubscription[]
 }
 
 model Anggota {
@@ -362,5 +363,17 @@ model Notifikasi {
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, dibaca])
+  @@index([userId])
+}
+
+model PushSubscription {
+  id            String @id @default(cuid())
+  userId        String
+  endpoint      String @unique
+  p256dh        String
+  auth          String
+  createdAt     DateTime @default(now())
+  user          User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
 }
