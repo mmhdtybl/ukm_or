@@ -366,9 +366,9 @@ export default function DashboardShell({
       <div
         className="
           flex
-          min-h-[calc(100vh-1rem)]
-          sm:min-h-[calc(100vh-1.5rem)]
-          lg:min-h-[calc(100vh-2rem)]
+          h-[calc(100vh-1rem)]
+          sm:h-[calc(100vh-1.5rem)]
+          lg:h-[calc(100vh-2rem)]
 
           overflow-hidden
 
@@ -781,7 +781,7 @@ export default function DashboardShell({
             MAIN CONTENT
         =================================================== */}
 
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           {/* =================================================
               MOBILE HEADER
           ================================================= */}
