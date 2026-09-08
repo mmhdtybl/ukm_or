@@ -702,6 +702,10 @@ export default function DashboardShell({
                   Profil
                 </Link>
 
+                <div className="shrink-0">
+                  <NotificationBell />
+                </div>
+
                 <button
                   onClick={() =>
                     signOut({

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FiBell, FiCheckCircle, FiCamera, FiFileText, FiCalendar, FiCheck, FiSmartphone } from "react-icons/fi";
@@ -224,14 +225,14 @@ export default function NotificationBell() {
         )}
       </button>
 
-      {open && (
-        <div
-          className="
-            absolute
-            right-0
-            top-11
-
-            z-50
+      {open &&
+        createPortal(
+          <div
+            className="
+            fixed
+            right-2
+            top-[64px]
+            z-[60]
 
             w-[340px]
             max-w-[calc(100vw-2rem)]
@@ -251,7 +252,7 @@ export default function NotificationBell() {
 
             backdrop-blur-xl
           "
-        >
+          >
           <div className="flex items-center justify-between border-b border-slate-200/70 px-4 py-3 dark:border-white/10">
             <p className="text-sm font-bold text-slate-900 dark:text-white">Notifikasi</p>
             {unread > 0 && (
@@ -413,8 +414,9 @@ export default function NotificationBell() {
               })
             )}
           </div>
-        </div>
-      )}
+        </div>,
+          document.body
+        )}
     </div>
   );
 }
