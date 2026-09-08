@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { getKapabilitas } from "@/lib/permissions";
 import { makeSlug } from "@/lib/utils";
+import { kirimNotifikasiBroadcast } from "@/lib/notifikasi";
 
 export async function GET() {
   const list = await prisma.berita.findMany({
@@ -30,5 +31,15 @@ export async function POST(req: NextRequest) {
       penulisId: (session.user as any).id,
     },
   });
+
+  if (berita.isPublished) {
+    await kirimNotifikasiBroadcast({
+      tipe: "BERITA",
+      judul: "Berita baru",
+      pesan: `Berita baru: ${berita.judul}`,
+      link: `/berita/${berita.slug}`,
+    });
+  }
+
   return NextResponse.json(berita, { status: 201 });
 }

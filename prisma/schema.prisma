@@ -27,6 +27,7 @@ model User {
   keuanganDicatat  Keuangan[]
   pengurus         Pengurus?
   presensiDiunggah PresensiFoto[]
+  notifikasi       Notifikasi[]
 }
 
 model Anggota {
@@ -347,4 +348,19 @@ model Ucapan {
 
   @@index([anggotaId])
   @@index([pengurusId])
+}
+
+model Notifikasi {
+  id        String    @id @default(cuid())
+  userId    String
+  tipe      String
+  judul     String
+  pesan     String
+  link      String?
+  dibaca    Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, dibaca])
+  @@index([userId])
 }

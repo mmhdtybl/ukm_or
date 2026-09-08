@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { getKapabilitas } from "@/lib/permissions";
+import { kirimNotifikasi } from "@/lib/notifikasi";
 
 export async function GET(req: NextRequest) {
   try {
@@ -232,6 +233,17 @@ export async function POST(req: NextRequest) {
           },
         },
       });
+
+    await kirimNotifikasi({
+      userId,
+      tipe: "PRESENSI",
+      judul:
+        status === "HADIR"
+          ? "Kehadiran tercatat"
+          : "Presensi izin tercatat",
+      pesan: `Presensi Anda untuk "${agenda.judul}" tercatat sebagai ${status === "HADIR" ? "hadir" : "izin"}.`,
+      link: `/akun-saya/presensi/${agendaId}`,
+    });
 
     return NextResponse.json(
       absensi,

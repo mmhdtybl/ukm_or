@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getKapabilitas } from "@/lib/permissions";
+import { kirimNotifikasiBroadcast } from "@/lib/notifikasi";
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const berita = await prisma.berita.findUnique({ where: { id: params.id } });
@@ -13,6 +14,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   if (!kap?.canManageBerita) return NextResponse.json({ message: "Tidak diizinkan" }, { status: 403 });
 
   const body = await req.json();
+  const existing = await prisma.berita.findUnique({ where: { id: params.id }, select: { isPublished: true, slug: true } });
   const berita = await prisma.berita.update({
     where: { id: params.id },
     data: {
@@ -24,6 +26,17 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       isPublished: !!body.isPublished,
     },
   });
+
+  const newlyPublished = berita.isPublished && !existing?.isPublished;
+  if (newlyPublished) {
+    await kirimNotifikasiBroadcast({
+      tipe: "BERITA",
+      judul: "Berita baru",
+      pesan: `Berita baru: ${berita.judul}`,
+      link: `/berita/${berita.slug}`,
+    });
+  }
+
   return NextResponse.json(berita);
 }
 

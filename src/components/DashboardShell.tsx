@@ -31,6 +31,7 @@ import {
 } from "react-icons/fi";
 
 import DarkModeToggle from "./DarkModeToggle";
+import NotificationBell from "./admin/NotificationBell";
 import type { Kapabilitas } from "@/lib/permissions";
 
 export default function DashboardShell({
@@ -869,6 +870,8 @@ export default function DashboardShell({
             </div>
 
             <div className="flex items-center gap-2">
+              <NotificationBell />
+
               <Link
                 href="/akun-saya/profil"
                 aria-label="Profil saya"

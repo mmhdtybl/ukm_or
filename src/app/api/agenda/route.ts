@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { getKapabilitas } from "@/lib/permissions";
 import { makeSlug } from "@/lib/utils";
+import { kirimNotifikasiBroadcast } from "@/lib/notifikasi";
 
 export async function GET() {
   const list = await prisma.agenda.findMany({ orderBy: { tanggalMulai: "desc" } });
@@ -30,5 +31,13 @@ export async function POST(req: NextRequest) {
       dibuatOlehId: (session.user as any).id,
     },
   });
+
+  await kirimNotifikasiBroadcast({
+    tipe: "AGENDA",
+    judul: "Agenda baru",
+    pesan: `Agenda baru: ${agenda.judul}`,
+    link: "/agenda",
+  });
+
   return NextResponse.json(agenda, { status: 201 });
 }
