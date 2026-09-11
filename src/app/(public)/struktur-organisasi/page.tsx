@@ -68,14 +68,22 @@ function KartuOrang({ person }: { person: Person }) {
 function Seksi({
   title,
   people,
+  boxed = true,
 }: {
   title: string;
   people: Person[];
+  boxed?: boolean;
 }) {
   if (!people.length) return null;
 
   return (
-    <section className="space-y-6">
+    <section
+      className={
+        boxed
+          ? "rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-6 dark:border-slate-700 dark:bg-slate-800"
+          : "space-y-6"
+      }
+    >
       <div className="flex items-center justify-between border-b border-slate-200 pb-3 dark:border-slate-700">
         <div className="flex items-center gap-3">
           <span className="h-8 w-1 rounded-full bg-blue-600" />
@@ -240,21 +248,22 @@ export default async function StrukturPage() {
           {daftarDivisi.map((divisi) => (
             <section
               key={divisi}
-              className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+              className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800"
             >
-              <div className="mb-8 flex items-center justify-between">
+              <div className="mb-6 flex items-center justify-between">
                 <div>
                   <span className="text-xs font-semibold uppercase tracking-wider text-blue-600">
                     Cabang Olahraga
                   </span>
-                  <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
                     Divisi {divisi}
                   </h2>
                 </div>
               </div>
 
-              <div className="space-y-10">
+              <div className="space-y-8">
                 <Seksi
+                  boxed={false}
                   title="Kepala Divisi"
                   people={personPengurus(
                     kadiv.filter((p) => p.divisi === divisi)
@@ -262,6 +271,7 @@ export default async function StrukturPage() {
                 />
 
                 <Seksi
+                  boxed={false}
                   title="Pengurus Divisi"
                   people={personPengurus(
                     staffDivisi.filter((p) => p.divisi === divisi)
@@ -269,6 +279,7 @@ export default async function StrukturPage() {
                 />
 
                 <Seksi
+                  boxed={false}
                   title="Anggota Divisi"
                   people={personAnggota(
                     anggota.filter((a) => a.divisi === divisi)
