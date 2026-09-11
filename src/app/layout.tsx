@@ -15,7 +15,18 @@ export const metadata: Metadata = {
     default: "UKM Olahraga Unimma",
     template: "%s | UKM Olahraga Unimma",
   },
-  description: "Website resmi UKM Olahraga Universitas Muhammadiyah Magelang — wadah pengembangan minat dan bakat mahasiswa di bidang olahraga dan event.",
+  description:
+    "Website resmi UKM Olahraga Universitas Muhammadiyah Magelang — wadah pengembangan minat dan bakat mahasiswa di bidang olahraga dan event.",
+  manifest: "/manifest.json",
+  icons: {
+    apple: "/branding/logo-ukm.png",
+  },
+  other: {
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "black-translucent",
+    "apple-mobile-web-app-title": "UKM Olahraga",
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
