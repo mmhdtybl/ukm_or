@@ -47,7 +47,8 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [list, setList] = useState<NotifItem[]>([]);
   const [unread, setUnread] = useState(0);
-  const [pushAktif, setPushAktif] = useState<boolean | null>(null);
+  const [pushAktif, setPushAktif] = useState(false);
+  const [pushDidukung, setPushDidukung] = useState(false);
   const [pushMsg, setPushMsg] = useState("");
   const ref = useRef<HTMLDivElement>(null);
 
@@ -75,76 +76,113 @@ export default function NotificationBell() {
     };
   }, [muat]);
 
+  const didukungPush = useCallback(() => {
+    return (
+      "serviceWorker" in navigator &&
+      "PushManager" in window &&
+      typeof Notification !== "undefined"
+    );
+  }, []);
+
+  const pesanTidakDidukung = useCallback(() => {
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    return ios
+      ? "Di iPhone: buka menu Bagikan → “Tambahkan ke Layar Utama”, lalu buka situs dari ikon aplikasi untuk mengaktifkan notifikasi."
+      : "Browser ini belum mendukung notifikasi push.";
+  }, []);
+
   const cekPush = useCallback(async () => {
-    const didukung =
-      "serviceWorker" in navigator && "PushManager" in window && typeof Notification !== "undefined";
-    if (!didukung) {
+    if (!didukungPush()) {
+      setPushDidukung(false);
       setPushAktif(false);
-      setPushMsg("Perangkat ini tidak mendukung notifikasi push.");
+      setPushMsg(pesanTidakDidukung());
       return;
     }
+    setPushDidukung(true);
     try {
       const res = await fetch("/api/push/status", { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
         setPushAktif(data.subscribed && Notification.permission === "granted");
+      } else {
+        setPushAktif(false);
       }
     } catch {
-      /* abaikan */
+      setPushAktif(false);
     }
-  }, []);
+  }, [didukungPush, pesanTidakDidukung]);
 
   const togglePush = useCallback(async () => {
-    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-      setPushMsg("Perangkat ini tidak mendukung notifikasi push.");
-      setPushAktif(false);
+    if (!didukungPush()) {
+      setPushMsg(pesanTidakDidukung());
       return;
     }
 
-    // Jika sudah aktif → matikan (unsubscribe)
-    const reg = await navigator.serviceWorker.getRegistration();
-    const existingSub = reg ? await reg.pushManager.getSubscription() : null;
-    if (pushAktif || existingSub) {
-      if (existingSub) {
-        const endpoint = existingSub.endpoint;
-        await existingSub.unsubscribe();
-        await fetch(`/api/push/subscribe?endpoint=${encodeURIComponent(endpoint)}`, { method: "DELETE" });
+    try {
+      // Jika sudah aktif → matikan (unsubscribe)
+      const reg = await navigator.serviceWorker.getRegistration();
+      const existingSub = reg ? await reg.pushManager.getSubscription() : null;
+      if (pushAktif || existingSub) {
+        if (existingSub) {
+          const endpoint = existingSub.endpoint;
+          await existingSub.unsubscribe();
+          await fetch(`/api/push/subscribe?endpoint=${encodeURIComponent(endpoint)}`, {
+            method: "DELETE",
+          }).catch(() => {});
+        }
+        setPushAktif(false);
+        setPushMsg("");
+        return;
       }
-      setPushAktif(false);
+
+      // Aktifkan → minta izin
+      let perm = Notification.permission;
+      if (perm !== "granted") perm = await Notification.requestPermission();
+      if (perm !== "granted") {
+        setPushMsg(
+          perm === "denied"
+            ? "Izin notifikasi diblokir di browser. Buka pengaturan browser → Izin/Situs → Notifikasi untuk mengizinkan situs ini."
+            : "Anda menolak izin notifikasi. Aktifkan kembali lewat pengaturan browser."
+        );
+        return;
+      }
+
+      const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      if (!publicKey) {
+        setPushMsg("Kunci push belum dikonfigurasi.");
+        return;
+      }
+
+      const registration =
+        reg && reg.scope && reg.scope.includes("/")
+          ? reg
+          : await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+      const sub = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey),
+      });
+      const res = await fetch("/api/push/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(sub.toJSON()),
+      });
+      if (!res.ok) {
+        setPushMsg("Gagal menyimpan langganan notifikasi. Coba lagi.");
+        return;
+      }
+      setPushAktif(true);
       setPushMsg("");
-      return;
+    } catch (err: any) {
+      const eid = err?.message || String(err);
+      if (/permission|denied|not allowed|not permitted/i.test(eid)) {
+        setPushMsg(
+          "Izin notifikasi diblokir di browser. Buka pengaturan browser → Izin/Situs → Notifikasi untuk mengizinkan situs ini."
+        );
+      } else {
+        setPushMsg(`Gagal mengaktifkan: ${eid}. Coba lagi.`);
+      }
     }
-
-    // Aktifkan → minta izin
-    let perm = Notification.permission;
-    if (perm === "default") perm = await Notification.requestPermission();
-    if (perm !== "granted") {
-      setPushMsg("Izin notifikasi ditolak. Aktifkan lewat pengaturan browser.");
-      return;
-    }
-
-    const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-    if (!publicKey) {
-      setPushMsg("Kunci push belum dikonfigurasi.");
-      return;
-    }
-
-    const registration =
-      reg && reg.scope.includes("/")
-        ? reg
-        : await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-    const sub = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(publicKey),
-    });
-    await fetch("/api/push/subscribe", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(sub.toJSON()),
-    });
-    setPushAktif(true);
-    setPushMsg("");
-  }, [pushAktif]);
+  }, [pushAktif, didukungPush, pesanTidakDidukung]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -276,7 +314,7 @@ export default function NotificationBell() {
             )}
           </div>
 
-          {pushAktif !== null && (
+          {pushDidukung && (
             <button
               onClick={togglePush}
               className="
