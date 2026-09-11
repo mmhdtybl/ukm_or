@@ -55,7 +55,7 @@ export default function LoginPage() {
           <div className="anim-float-slow absolute -inset-3 rounded-full bg-accent/15" />
           <div className="anim-float absolute -inset-6 rounded-full bg-primary-light/10" />
           <Image
-            src="/branding/logo-ukm.png"
+            src="/branding/logo-ukm-transparent.png"
             alt="UKM Olahraga"
             width={96}
             height={96}

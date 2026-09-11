@@ -72,7 +72,7 @@ export default function Navbar() {
               "
             >
               <Image
-                src="/branding/logo-ukm.png"
+                src="/branding/logo-ukm-transparent.png"
                 alt="Logo UKM Olahraga"
                 fill
                 className="object-contain p-0.5"

@@ -4,7 +4,7 @@ import Image from "next/image";
 export const metadata = { title: "Profil UKM" };
 
 // Gambar default: dipakai jika Admin belum mengunggah logo/foto lewat Dashboard > Kelola Profil UKM
-const DEFAULT_LOGO = "/branding/logo-ukm.png";
+const DEFAULT_LOGO = "/branding/logo-ukm-transparent.png";
 const DEFAULT_BG = "/branding/foto-profil-bg.png";
 
 export default async function ProfilPage() {

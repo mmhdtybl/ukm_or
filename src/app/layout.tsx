@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     "Website resmi UKM Olahraga Universitas Muhammadiyah Magelang — wadah pengembangan minat dan bakat mahasiswa di bidang olahraga dan event.",
   manifest: "/manifest.json",
   icons: {
-    apple: "/branding/logo-ukm.png",
+    apple: "/branding/logo-ukm-transparent.png",
   },
   other: {
     "apple-mobile-web-app-capable": "yes",
@@ -67,7 +67,7 @@ const SPLASH_CSS = `
 }
 
 /* === LOGO MUNCUL === */
-.splash-logo{position:relative;z-index:10;width:110px;height:110px;border-radius:28px;background:#fff;padding:10px;object-fit:contain;box-shadow:0 8px 40px rgba(0,113,227,.3),0 0 80px rgba(255,214,10,.15);animation:logoReveal 1s ease-out 2s forwards;opacity:0;transform:scale(.5)}
+.splash-logo{position:relative;z-index:10;width:115px;height:115px;object-fit:contain;animation:logoReveal 1s ease-out 2s forwards;opacity:0;transform:scale(.5);filter:drop-shadow(0 0 25px rgba(0,113,227,.55)) drop-shadow(0 0 60px rgba(255,214,10,.25))}
 @keyframes logoReveal{
   0%{opacity:0;transform:scale(.5)}
   60%{opacity:1;transform:scale(1.08)}
@@ -103,7 +103,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="comet-yellow" />
           <div className="burst" />
           <div className="glow-residue" />
-          <img src="/branding/logo-ukm.png" alt="UKM Olahraga" className="splash-logo" />
+          <img src="/branding/logo-ukm-transparent.png" alt="UKM Olahraga" className="splash-logo" />
           <span className="splash-title">UKM Olahraga</span>
         </div>
         <Providers>{children}</Providers>

@@ -50,8 +50,8 @@ self.addEventListener("push", (event) => {
   const title = data.title || "Notifikasi UKM Olahraga";
   const options = {
     body: data.body || "",
-    icon: data.icon || "/branding/logo-ukm.png",
-    badge: data.badge || "/branding/logo-ukm.png",
+    icon: data.icon || "/branding/logo-ukm-transparent.png",
+    badge: data.badge || "/branding/logo-ukm-transparent.png",
     data: { link: data.link || "/" },
   };
 

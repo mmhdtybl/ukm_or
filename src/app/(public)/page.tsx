@@ -426,7 +426,7 @@ export default async function HomePage() {
               <div className="animate-pulse-soft absolute -right-4 -top-5 hidden h-16 w-16 items-center justify-center rounded-2xl bg-yellow-400 shadow-lg shadow-yellow-400/30 sm:flex">
 
                 <Image
-                src="/branding/logo-ukm.png"
+                src="/branding/logo-ukm-transparent.png"
                 alt="Logo UKM Olahraga"
                 width={42}
                 height={42}

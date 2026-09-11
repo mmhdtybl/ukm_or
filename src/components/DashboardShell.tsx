@@ -459,7 +459,7 @@ export default function DashboardShell({
   "
 >
   <img
-    src="/branding/logo-ukm.png"
+    src="/branding/logo-ukm-transparent.png"
     alt="Logo UKM Olahraga"
     className="h-full w-full object-contain"
   />
