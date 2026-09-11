@@ -109,7 +109,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>{children}</Providers>
         <script
           dangerouslySetInnerHTML={{
-            __html: `var t0=Date.now(),min=2500;window.addEventListener("load",function(){var r=Math.max(0,min-(Date.now()-t0));setTimeout(function(){var s=document.getElementById("splash-loader");if(s){s.style.opacity="0";setTimeout(function(){s.remove()},700)}},r)});`,
+            __html: `
+var t0=Date.now(),min=2500;
+window.addEventListener("load",function(){
+  var r=Math.max(0,min-(Date.now()-t0));
+  setTimeout(function(){var s=document.getElementById("splash-loader");if(s){s.style.opacity="0";setTimeout(function(){s.remove()},700)}},r);
+  if("serviceWorker" in navigator){navigator.serviceWorker.register("/sw.js",{scope:"/"}).catch(function(){})}
+});`,
           }}
         />
       </body>
