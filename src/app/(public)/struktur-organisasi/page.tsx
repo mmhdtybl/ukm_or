@@ -20,9 +20,9 @@ function KartuOrang({ person }: { person: Person }) {
     <article className="group relative overflow-hidden rounded-3xl border border-slate-200/70 bg-white p-4 text-center shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl sm:p-6 dark:border-slate-700 dark:bg-slate-800">
       <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-400 opacity-90" />
 
-      <div className="relative mx-auto mt-3 mb-5 h-20 w-20 sm:h-28 sm:w-28">
+      <div className="relative mx-auto mt-5 mb-5 h-20 w-20 sm:mt-3 sm:h-28 sm:w-28">
         {person.crown && (
-          <div className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2">
+          <div className="pointer-events-none absolute -top-7 left-1/2 z-10 -translate-x-1/2">
             <div className="anim-crown-float">
               <span className="anim-crown-glow grid h-8 w-8 place-items-center rounded-full bg-white shadow-lg ring-2 ring-yellow-400 sm:h-10 sm:w-10 dark:bg-slate-800 dark:ring-yellow-500/80">
                 <FaCrown className="h-4 w-4 text-yellow-500 sm:h-5 sm:w-5" />
