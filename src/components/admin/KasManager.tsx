@@ -112,13 +112,14 @@ export default function KasManager({
 
         <ExportExcelButton
           filename="data-kas.xlsx"
-          headers={["Tanggal", "Divisi", "Kategori", "Dari", "Metode", "Jenis", "Jumlah", "Status"]}
+          headers={["Tanggal", "Divisi", "Kategori", "Dari", "Metode", "Bukti URL", "Jenis", "Jumlah", "Status"]}
           rows={filtered.map((k) => [
             formatTanggal(k.tanggal),
             divisiDari(k) || "-",
             k.kategori || "",
             namaDari(k),
             k.metode === "TRANSFER" ? "Transfer" : "Offline",
+            k.buktiUrl || "",
             k.jenis || "",
             k.jumlah ?? "",
             k.status || "",
@@ -128,7 +129,7 @@ export default function KasManager({
 
       <div className="card overflow-x-auto">
         <table className="table-admin">
-          <thead><tr><th>Tanggal</th><th>Divisi</th><th>Kategori</th><th>Dari</th><th>Metode</th><th>Jenis</th><th>Jumlah</th><th>Status</th><th>Aksi</th></tr></thead>
+          <thead><tr><th>Tanggal</th><th>Divisi</th><th>Kategori</th><th>Dari</th><th>Metode</th><th>Bukti</th><th>Jenis</th><th>Jumlah</th><th>Status</th><th>Aksi</th></tr></thead>
           <tbody>
             {filtered.map((k) => (
               <tr key={k.id}>
@@ -137,6 +138,15 @@ export default function KasManager({
                 <td>{k.kategori}</td>
                 <td>{k.anggota ? `${k.anggota.nama} (${k.anggota.nim})` : k.pengurus ? `${k.pengurus.nama} (Pengurus)` : k.dicatatOleh?.name || "-"}</td>
                 <td><span className="text-xs font-medium uppercase text-slate-500 dark:text-slate-400">{k.metode === "TRANSFER" ? "Transfer" : "Offline"}</span></td>
+                <td>
+                  {k.buktiUrl ? (
+                    <a href={k.buktiUrl} target="_blank" rel="noreferrer" title="Lihat bukti transfer" className="inline-flex">
+                      <img src={k.buktiUrl} alt="bukti" className="h-9 w-9 rounded-lg border border-slate-200 object-cover dark:border-white/10" />
+                    </a>
+                  ) : (
+                    <span className="text-slate-400">-</span>
+                  )}
+                </td>
                 <td className={k.jenis === "MASUK" ? "text-green-600" : "text-red-500"}>{k.jenis}</td>
                 <td>{formatUang(k.jumlah)}</td>
                 <td>
@@ -155,7 +165,7 @@ export default function KasManager({
                 </td>
               </tr>
             ))}
-            {filtered.length === 0 && <tr><td colSpan={9} className="text-center text-slate-400 py-6">Tidak ada data.</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan={10} className="text-center text-slate-400 py-6">Tidak ada data.</td></tr>}
           </tbody>
         </table>
       </div>

@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { formatUang } from "@/lib/utils";
 import ExportExcelButton from "@/components/admin/ExportExcelButton";
+import { FiUpload } from "react-icons/fi";
 
 type Metode = "OFFLINE" | "TRANSFER";
 
@@ -31,12 +33,39 @@ export default function KasSayaClient({
   const [bulanTagih, setBulanTagih] = useState(defaultBulan);
   const [jumlah, setJumlah] = useState("");
   const [keterangan, setKeterangan] = useState("");
+  const [buktiUrl, setBuktiUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const [sudahBayar, setSudahBayar] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const transferReady = Boolean(tujuan);
   const canSubmit =
-    metode === "OFFLINE" || (metode === "TRANSFER" && sudahBayar);
+    metode === "OFFLINE" ||
+    (metode === "TRANSFER" && sudahBayar && Boolean(buktiUrl));
+
+  async function handleBukti(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setUploadError("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        setUploadError(data.message || "Gagal mengunggah bukti transfer.");
+        return;
+      }
+      setBuktiUrl(data.url);
+    } catch {
+      setUploadError("Gagal mengunggah bukti transfer. Coba lagi.");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -51,10 +80,12 @@ export default function KasSayaClient({
         kategori: "Kas Anggota",
         metode,
         bulanTagih,
+        buktiUrl: buktiUrl || null,
       }),
     });
     setJumlah("");
     setKeterangan("");
+    setBuktiUrl("");
     setSudahBayar(false);
     setLoading(false);
     router.refresh();
@@ -170,6 +201,42 @@ export default function KasSayaClient({
                     Saya sudah melakukan transfer ke nomer di atas
                   </span>
                 </label>
+              )}
+
+              {transferReady && (
+                <div>
+                  <label className="label">Bukti Transfer</label>
+                  <div className="flex items-center gap-4">
+                    <div className="relative grid h-20 w-24 shrink-0 place-items-center overflow-hidden rounded-lg bg-surface-light dark:bg-white/10">
+                      {buktiUrl ? (
+                        <Image src={buktiUrl} alt="Bukti transfer" fill className="object-cover" />
+                      ) : uploading ? (
+                        <span className="px-2 text-center text-[11px] text-slate-400">
+                          Mengunggah...
+                        </span>
+                      ) : (
+                        <FiUpload className="text-slate-400" />
+                      )}
+                    </div>
+                    <label className="btn-outline !py-2 !px-4 text-sm cursor-pointer">
+                      {uploading ? "Mengunggah..." : "Pilih Foto"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleBukti}
+                      />
+                    </label>
+                  </div>
+                  {uploadError && (
+                    <p className="mt-1 text-xs text-red-600 dark:text-red-400">{uploadError}</p>
+                  )}
+                  {buktiUrl && !uploadError && (
+                    <p className="mt-1 text-xs text-slate-400">
+                      Bukti terunggah. Centang pernyataan lalu kirim laporan.
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           )}
