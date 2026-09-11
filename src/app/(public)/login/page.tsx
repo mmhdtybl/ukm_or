@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import PasswordInput from "@/components/PasswordInput";
 
 export default function LoginPage() {
@@ -10,7 +11,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Jika sudah login, langsung arahkan ke dashboard/akun
   useEffect(() => {
     getSession().then((session) => {
       if (session?.user) {
@@ -49,8 +49,23 @@ export default function LoginPage() {
   return (
     <div className="container-page py-20">
       <div className="max-w-md mx-auto card">
-        <h1 className="text-2xl font-bold text-primary dark:text-white mb-1">Masuk</h1>
-        <p className="text-sm text-slate-500 mb-6">Login untuk Admin, Pengurus, dan Anggota UKM Olahraga</p>
+        {/* Logo + Glow */}
+        <div className="relative mx-auto mb-6 h-32 w-32 flex items-center justify-center">
+          <div className="anim-pulse-glow absolute inset-0 rounded-full bg-primary/30" />
+          <div className="anim-float-slow absolute -inset-3 rounded-full bg-accent/15" />
+          <div className="anim-float absolute -inset-6 rounded-full bg-primary-light/10" />
+          <Image
+            src="/branding/logo-ukm.png"
+            alt="UKM Olahraga"
+            width={96}
+            height={96}
+            className="relative h-24 w-24 rounded-2xl object-contain shadow-lg"
+            priority
+          />
+        </div>
+
+        <h1 className="text-2xl font-bold text-primary dark:text-white mb-1 text-center">Masuk</h1>
+        <p className="text-sm text-slate-500 mb-6 text-center">Login untuk Admin, Pengurus, dan Anggota UKM Olahraga</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
