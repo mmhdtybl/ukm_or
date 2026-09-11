@@ -33,7 +33,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="id" suppressHydrationWarning>
       <body className={`${poppins.variable} ${inter.variable}`}>
+        <div id="splash-loader">
+          <div className="splash-orb splash-orb-1" />
+          <div className="splash-orb splash-orb-2" />
+          <div className="splash-orb splash-orb-3" />
+          <img src="/branding/logo-ukm.png" alt="UKM Olahraga" className="splash-logo" />
+        </div>
         <Providers>{children}</Providers>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.addEventListener("load",function(){var s=document.getElementById("splash-loader");if(s){s.style.opacity="0";setTimeout(function(){s.remove()},600)}});`,
+          }}
+        />
       </body>
     </html>
   );
