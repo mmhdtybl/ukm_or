@@ -17,42 +17,42 @@ type Person = {
 
 function KartuOrang({ person }: { person: Person }) {
   return (
-    <article className="group relative overflow-hidden rounded-3xl border border-slate-200/70 bg-white p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl dark:border-slate-700 dark:bg-slate-800">
+    <article className="group relative overflow-hidden rounded-3xl border border-slate-200/70 bg-white p-4 text-center shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl sm:p-6 dark:border-slate-700 dark:bg-slate-800">
       <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-400 opacity-90" />
 
-      <div className="relative mx-auto mt-3 mb-5 h-28 w-28">
+      <div className="relative mx-auto mt-3 mb-5 h-20 w-20 sm:h-28 sm:w-28">
         {person.crown && (
           <div className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2">
             <div className="anim-crown-float">
-              <span className="anim-crown-glow grid h-10 w-10 place-items-center rounded-full bg-white shadow-lg ring-2 ring-yellow-400 dark:bg-slate-800 dark:ring-yellow-500/80">
-                <FaCrown className="h-5 w-5 text-yellow-500" />
+              <span className="anim-crown-glow grid h-8 w-8 place-items-center rounded-full bg-white shadow-lg ring-2 ring-yellow-400 sm:h-10 sm:w-10 dark:bg-slate-800 dark:ring-yellow-500/80">
+                <FaCrown className="h-4 w-4 text-yellow-500 sm:h-5 sm:w-5" />
               </span>
             </div>
           </div>
         )}
 
-        <div className="relative h-28 w-28 overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-lg dark:border-slate-800 dark:bg-slate-700">
+        <div className="relative h-20 w-20 overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-lg sm:h-28 sm:w-28 dark:border-slate-800 dark:bg-slate-700">
           {person.foto ? (
             <Image
               src={person.foto}
               alt={`Foto ${person.nama}`}
               fill
-              sizes="112px"
+              sizes="80px, (min-width: 640px) 112px"
               className="object-cover"
             />
           ) : (
             <div className="grid h-full place-items-center">
-              <FiUser size={40} className="text-slate-400" />
+              <FiUser size={32} className="text-slate-400 sm:size-10" />
             </div>
           )}
         </div>
       </div>
 
-      <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+      <h3 className="text-base font-bold text-slate-900 sm:text-lg dark:text-white">
         {person.nama}
       </h3>
 
-      <p className="mt-2 inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+      <p className="mt-2 inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700 sm:px-3 sm:text-xs dark:bg-blue-900/30 dark:text-blue-300">
         {person.jabatan}
       </p>
 
@@ -80,7 +80,7 @@ function Seksi({
     <section
       className={
         boxed
-          ? "rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-6 dark:border-slate-700 dark:bg-slate-800"
+          ? "rounded-3xl border border-slate-200 bg-white p-4 shadow-sm space-y-6 sm:p-6 dark:border-slate-700 dark:bg-slate-800"
           : "space-y-6"
       }
     >
@@ -193,7 +193,7 @@ export default async function StrukturPage() {
 
   return (
     <div className="container-page py-16">
-      <section className="relative mb-16 overflow-hidden rounded-[32px] bg-gradient-to-br from-blue-900 via-blue-700 to-sky-500 px-8 py-14 text-white">
+      <section className="relative mb-16 overflow-hidden rounded-[32px] bg-gradient-to-br from-blue-900 via-blue-700 to-sky-500 px-6 py-12 text-white sm:px-8 sm:py-14">
         <div className="absolute right-0 top-0 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
         <div className="absolute bottom-0 left-0 h-40 w-40 rounded-full bg-cyan-300/20 blur-3xl" />
 
@@ -248,7 +248,7 @@ export default async function StrukturPage() {
           {daftarDivisi.map((divisi) => (
             <section
               key={divisi}
-              className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+              className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 dark:border-slate-700 dark:bg-slate-800"
             >
               <div className="mb-6 flex items-center justify-between">
                 <div>
