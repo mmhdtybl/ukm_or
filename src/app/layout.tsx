@@ -30,17 +30,65 @@ export const metadata: Metadata = {
 };
 
 const SPLASH_CSS = `
-@keyframes pulseGlow{0%,100%{opacity:.55;filter:blur(60px)}50%{opacity:.95;filter:blur(80px)}}
-@keyframes floatGlow{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(20px,-30px) scale(1.08)}66%{transform:translate(-25px,15px) scale(.95)}}
-@keyframes floatGlowSlow{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-30px,-25px) scale(1.12)}}
-@keyframes splashIn{0%{opacity:0;transform:scale(.65) translateY(16px)}100%{opacity:1;transform:scale(1) translateY(0)}}
-#splash-loader{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#FAFAFA;transition:opacity .6s ease}
-@media(prefers-color-scheme:dark){#splash-loader{background:#1D1D1D}}
-.splash-orb{position:absolute;border-radius:9999px;filter:blur(50px)}
-.splash-orb-1{width:180px;height:180px;background:rgba(0,113,227,.35);animation:pulseGlow 3s ease-in-out infinite}
-.splash-orb-2{width:140px;height:140px;background:rgba(77,163,255,.25);animation:floatGlow 6s ease-in-out infinite}
-.splash-orb-3{width:120px;height:120px;background:rgba(255,149,0,.15);animation:floatGlowSlow 8s ease-in-out infinite}
-.splash-logo{position:relative;z-index:2;width:100px;height:100px;object-fit:contain;filter:drop-shadow(0 4px 20px rgba(0,113,227,.3));animation:splashIn .8s ease-out}
+*{margin:0;padding:0;box-sizing:border-box}
+#splash-loader{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#0a0e1a;overflow:hidden;transition:opacity .7s ease}
+@media(prefers-color-scheme:light){#splash-loader{background:linear-gradient(180deg,#0a0e1a 0%,#111827 100%)}}
+
+/* === KOMET BIRU (dari kiri bawah) === */
+.comet-blue{position:absolute;width:18px;height:18px;border-radius:50%;background:#4DA3FF;box-shadow:0 0 8px 2px #4DA3FF,0 0 20px 6px rgba(77,163,255,.7),0 0 40px 12px rgba(77,163,255,.4),0 0 70px 20px rgba(77,163,255,.2);animation:cometBlue 2s cubic-bezier(.23,1,.32,1) forwards;opacity:0}
+.comet-blue::after{content:'';position:absolute;top:50%;right:100%;width:120px;height:4px;margin-top:-2px;border-radius:4px;background:linear-gradient(90deg,transparent,rgba(77,163,255,.6),#4DA3FF);filter:blur(2px);transform-origin:right center}
+@keyframes cometBlue{
+  0%{transform:translate(-55vw,55vh) scale(.4);opacity:0}
+  10%{opacity:1}
+  50%{transform:translate(-4vw,4vh) scale(.9);opacity:1}
+  65%{transform:translate(0,0) scale(1.2);opacity:.9}
+  80%{transform:translate(0,0) scale(.3);opacity:0}
+  100%{transform:translate(0,0) scale(0);opacity:0}
+}
+
+/* === KOMET KUNING (dari kanan bawah) === */
+.comet-yellow{position:absolute;width:18px;height:18px;border-radius:50%;background:#FFD60A;box-shadow:0 0 8px 2px #FFD60A,0 0 20px 6px rgba(255,214,10,.7),0 0 40px 12px rgba(255,214,10,.4),0 0 70px 20px rgba(255,214,10,.2);animation:cometYellow 2s cubic-bezier(.23,1,.32,1) forwards;opacity:0}
+.comet-yellow::after{content:'';position:absolute;top:50%;left:100%;width:120px;height:4px;margin-top:-2px;border-radius:4px;background:linear-gradient(270deg,transparent,rgba(255,214,10,.6),#FFD60A);filter:blur(2px);transform-origin:left center}
+@keyframes cometYellow{
+  0%{transform:translate(55vw,55vh) scale(.4);opacity:0}
+  10%{opacity:1}
+  50%{transform:translate(4vw,4vh) scale(.9);opacity:1}
+  65%{transform:translate(0,0) scale(1.2);opacity:.9}
+  80%{transform:translate(0,0) scale(.3);opacity:0}
+  100%{transform:translate(0,0) scale(0);opacity:0}
+}
+
+/* === LEDAKAN CAHAYA SAAT BERTemu === */
+.burst{position:absolute;width:40px;height:40px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.9),rgba(77,163,255,.4),rgba(255,214,10,.3),transparent);animation:burstAnim 1.2s ease-out 1.6s forwards;opacity:0;transform:scale(0)}
+@keyframes burstAnim{
+  0%{transform:scale(0);opacity:0}
+  30%{transform:scale(1);opacity:1}
+  100%{transform:scale(8);opacity:0}
+}
+
+/* === LOGO MUNCUL === */
+.splash-logo{position:relative;z-index:10;width:110px;height:110px;object-fit:contain;animation:logoReveal 1s ease-out 2s forwards;opacity:0;transform:scale(.5);filter:drop-shadow(0 0 30px rgba(0,113,227,.5)) drop-shadow(0 0 60px rgba(255,214,10,.3))}
+@keyframes logoReveal{
+  0%{opacity:0;transform:scale(.5)}
+  60%{opacity:1;transform:scale(1.08)}
+  100%{opacity:1;transform:scale(1)}
+}
+
+/* === GLOW RESIDU DI TENGAH === */
+.glow-residue{position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(77,163,255,.2),rgba(255,214,10,.1),transparent 70%);animation:residue 2.5s ease-out 1.8s forwards;opacity:0;transform:scale(0)}
+@keyframes residue{
+  0%{opacity:0;transform:scale(0)}
+  40%{opacity:.7;transform:scale(1)}
+  100%{opacity:0;transform:scale(2)}
+}
+
+/* === TEKS NAMA SETELAH LOGO === */
+.splash-title{position:absolute;z-index:10;bottom:28%;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif;font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.7);animation:titleIn .8s ease-out 2.6s forwards;opacity:0;transform:translateY(8px)}
+@media(prefers-color-scheme:light){.splash-title{color:rgba(255,255,255,.8)}}
+@keyframes titleIn{
+  0%{opacity:0;transform:translateY(8px)}
+  100%{opacity:1;transform:translateY(0)}
+}
 `;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -51,15 +99,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`${poppins.variable} ${inter.variable}`}>
         <div id="splash-loader">
-          <div className="splash-orb splash-orb-1" />
-          <div className="splash-orb splash-orb-2" />
-          <div className="splash-orb splash-orb-3" />
+          <div className="comet-blue" />
+          <div className="comet-yellow" />
+          <div className="burst" />
+          <div className="glow-residue" />
           <img src="/branding/logo-ukm.png" alt="UKM Olahraga" className="splash-logo" />
+          <span className="splash-title">UKM Olahraga</span>
         </div>
         <Providers>{children}</Providers>
         <script
           dangerouslySetInnerHTML={{
-            __html: `window.addEventListener("load",function(){var s=document.getElementById("splash-loader");if(s){s.style.opacity="0";setTimeout(function(){s.remove()},600)}});`,
+            __html: `window.addEventListener("load",function(){var s=document.getElementById("splash-loader");if(s){s.style.opacity="0";setTimeout(function(){s.remove()},700)}});`,
           }}
         />
       </body>
