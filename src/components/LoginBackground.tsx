@@ -5,8 +5,8 @@ import { useEffect, useRef } from "react";
 interface Particle {
   x: number;
   y: number;
-  baseX: number;
-  baseY: number;
+  vx: number;
+  vy: number;
   radius: number;
   alpha: number;
   color: string;
@@ -16,6 +16,8 @@ interface Particle {
   driftY: number;
   pulseSpeed: number;
   pulseAmp: number;
+  baseX: number;
+  baseY: number;
 }
 
 export default function LoginBackground() {
@@ -54,8 +56,8 @@ export default function LoginBackground() {
       return {
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        baseX: Math.random() * canvas.width,
-        baseY: Math.random() * canvas.height,
+        vx: 0,
+        vy: 0,
         radius: 0.5 + Math.random() * 2.5,
         alpha: 0.2 + Math.random() * 0.6,
         color: `${c[0]}, ${c[1]}, ${c[2]}`,
@@ -65,6 +67,8 @@ export default function LoginBackground() {
         driftY: (Math.random() - 0.5) * 0.3,
         pulseSpeed: 1 + Math.random() * 3,
         pulseAmp: 0.1 + Math.random() * 0.3,
+        baseX: Math.random() * canvas.width,
+        baseY: Math.random() * canvas.height,
       };
     });
 
@@ -76,6 +80,11 @@ export default function LoginBackground() {
     };
     window.addEventListener("mousemove", onMouseMove);
 
+    const REPEL_RADIUS = 120;
+    const REPEL_FORCE = 8;
+    const FRICTION = 0.96;
+    const RETURN_FORCE = 0.008;
+
     let time = 0;
     const animate = () => {
       time += 0.016;
@@ -84,16 +93,31 @@ export default function LoginBackground() {
       const idle = Date.now() - lastMoveRef.current > 800;
       const mx = mouseRef.current.x;
       const my = mouseRef.current.y;
+      const cursorActive = !idle && mouseRef.current.active;
 
-      particlesRef.current.forEach((p, i) => {
-        if (!idle && mouseRef.current.active) {
-          const dx = mx - p.x;
-          const dy = my - p.y;
+      particlesRef.current.forEach((p) => {
+        if (cursorActive) {
+          const dx = p.x - mx;
+          const dy = p.y - my;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          const pull = Math.min(0.03, 0.001 + dist * 0.00002);
-          p.x += dx * pull + Math.sin(time * p.speed + p.phase) * 0.5;
-          p.y += dy * pull + Math.cos(time * p.speed * 0.7 + p.phase) * 0.5;
-        } else {
+
+          if (dist < REPEL_RADIUS && dist > 0) {
+            const force = (1 - dist / REPEL_RADIUS) * REPEL_FORCE;
+            const angle = Math.atan2(dy, dx);
+            p.vx += Math.cos(angle) * force;
+            p.vy += Math.sin(angle) * force;
+          }
+        }
+
+        p.vx *= FRICTION;
+        p.vy *= FRICTION;
+
+        const homeX = p.baseX + Math.sin(time * p.speed * 0.5 + p.phase) * 30;
+        const homeY = p.baseY + Math.cos(time * p.speed * 0.3 + p.phase) * 20;
+        p.vx += (homeX - p.x) * RETURN_FORCE;
+        p.vy += (homeY - p.y) * RETURN_FORCE;
+
+        if (!cursorActive) {
           p.baseX += p.driftX;
           p.baseY += p.driftY;
 
@@ -101,18 +125,16 @@ export default function LoginBackground() {
           if (p.baseX > canvas.width + 50) p.baseX = -50;
           if (p.baseY < -50) p.baseY = canvas.height + 50;
           if (p.baseY > canvas.height + 50) p.baseY = -50;
-
-          const wobbleX = Math.sin(time * p.speed * 0.5 + p.phase) * 30;
-          const wobbleY = Math.cos(time * p.speed * 0.3 + p.phase) * 20;
-          const targetX = p.baseX + wobbleX;
-          const targetY = p.baseY + wobbleY;
-          p.x += (targetX - p.x) * 0.01;
-          p.y += (targetY - p.y) * 0.01;
         }
 
+        p.x += p.vx;
+        p.y += p.vy;
+
         const pulse = Math.sin(time * p.pulseSpeed + p.phase) * p.pulseAmp;
-        const currentAlpha = Math.max(0.05, p.alpha + pulse);
-        const currentRadius = p.radius + Math.sin(time * 1.5 + p.phase) * 0.5;
+        const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+        const boost = Math.min(speed * 0.1, 0.4);
+        const currentAlpha = Math.max(0.05, p.alpha + pulse + boost);
+        const currentRadius = p.radius + Math.sin(time * 1.5 + p.phase) * 0.5 + boost;
 
         const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, currentRadius * 3);
         grad.addColorStop(0, `rgba(${p.color}, ${currentAlpha})`);
