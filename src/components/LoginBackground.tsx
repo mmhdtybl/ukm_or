@@ -1,25 +1,28 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
-interface Orb {
+interface Particle {
   x: number;
   y: number;
   baseX: number;
   baseY: number;
-  vx: number;
-  vy: number;
   radius: number;
+  alpha: number;
   color: string;
   phase: number;
   speed: number;
+  driftX: number;
+  driftY: number;
+  pulseSpeed: number;
+  pulseAmp: number;
 }
 
 export default function LoginBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef = useRef({ x: 0, y: 0, active: false });
   const lastMoveRef = useRef(Date.now());
-  const orbsRef = useRef<Orb[]>([]);
+  const particlesRef = useRef<Particle[]>([]);
   const rafRef = useRef<number>(0);
 
   useEffect(() => {
@@ -36,29 +39,32 @@ export default function LoginBackground() {
     window.addEventListener("resize", resize);
 
     const colors = [
-      "rgba(0, 113, 227, 0.35)",
-      "rgba(59, 130, 246, 0.3)",
-      "rgba(99, 102, 241, 0.25)",
-      "rgba(139, 92, 246, 0.2)",
-      "rgba(0, 113, 227, 0.15)",
-      "rgba(59, 130, 246, 0.2)",
+      [0, 113, 227],
+      [59, 130, 246],
+      [99, 102, 241],
+      [139, 92, 246],
+      [180, 180, 255],
+      [200, 220, 255],
+      [255, 255, 255],
     ];
 
-    const orbCount = 6;
-    orbsRef.current = Array.from({ length: orbCount }, (_, i) => {
-      const angle = (i / orbCount) * Math.PI * 2;
-      const dist = 150 + Math.random() * 100;
+    const particleCount = 180;
+    particlesRef.current = Array.from({ length: particleCount }, () => {
+      const c = colors[Math.floor(Math.random() * colors.length)];
       return {
-        x: canvas.width / 2 + Math.cos(angle) * dist,
-        y: canvas.height / 2 + Math.sin(angle) * dist,
-        baseX: canvas.width / 2 + Math.cos(angle) * dist,
-        baseY: canvas.height / 2 + Math.sin(angle) * dist,
-        vx: 0,
-        vy: 0,
-        radius: 80 + Math.random() * 60,
-        color: colors[i % colors.length],
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        baseX: Math.random() * canvas.width,
+        baseY: Math.random() * canvas.height,
+        radius: 0.5 + Math.random() * 2.5,
+        alpha: 0.2 + Math.random() * 0.6,
+        color: `${c[0]}, ${c[1]}, ${c[2]}`,
         phase: Math.random() * Math.PI * 2,
-        speed: 0.3 + Math.random() * 0.4,
+        speed: 0.2 + Math.random() * 0.8,
+        driftX: (Math.random() - 0.5) * 0.3,
+        driftY: (Math.random() - 0.5) * 0.3,
+        pulseSpeed: 1 + Math.random() * 3,
+        pulseAmp: 0.1 + Math.random() * 0.3,
       };
     });
 
@@ -79,43 +85,48 @@ export default function LoginBackground() {
       const mx = mouseRef.current.x;
       const my = mouseRef.current.y;
 
-      orbsRef.current.forEach((orb, i) => {
-        const orbitRadius = 60 + i * 20;
-        const orbitSpeed = 0.4 + i * 0.1;
-
+      particlesRef.current.forEach((p, i) => {
         if (!idle && mouseRef.current.active) {
-          const angle = time * orbitSpeed + orb.phase;
-          const targetX = mx + Math.cos(angle) * orbitRadius;
-          const targetY = my + Math.sin(angle) * orbitRadius;
-          orb.x += (targetX - orb.x) * 0.04;
-          orb.y += (targetY - orb.y) * 0.04;
-          orb.baseX = mx;
-          orb.baseY = my;
+          const dx = mx - p.x;
+          const dy = my - p.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const pull = Math.min(0.03, 0.001 + dist * 0.00002);
+          p.x += dx * pull + Math.sin(time * p.speed + p.phase) * 0.5;
+          p.y += dy * pull + Math.cos(time * p.speed * 0.7 + p.phase) * 0.5;
         } else {
-          const randX = Math.sin(time * orb.speed + orb.phase) * 200;
-          const randY = Math.cos(time * orb.speed * 0.7 + orb.phase) * 150;
-          const targetX = orb.baseX + randX;
-          const targetY = orb.baseY + randY;
-          orb.x += (targetX - orb.x) * 0.02;
-          orb.y += (targetY - orb.y) * 0.02;
+          p.baseX += p.driftX;
+          p.baseY += p.driftY;
 
-          orb.baseX += Math.sin(time * 0.2 + i) * 0.5;
-          orb.baseY += Math.cos(time * 0.15 + i) * 0.5;
+          if (p.baseX < -50) p.baseX = canvas.width + 50;
+          if (p.baseX > canvas.width + 50) p.baseX = -50;
+          if (p.baseY < -50) p.baseY = canvas.height + 50;
+          if (p.baseY > canvas.height + 50) p.baseY = -50;
 
-          orb.baseX = Math.max(-100, Math.min(canvas.width + 100, orb.baseX));
-          orb.baseY = Math.max(-100, Math.min(canvas.height + 100, orb.baseY));
+          const wobbleX = Math.sin(time * p.speed * 0.5 + p.phase) * 30;
+          const wobbleY = Math.cos(time * p.speed * 0.3 + p.phase) * 20;
+          const targetX = p.baseX + wobbleX;
+          const targetY = p.baseY + wobbleY;
+          p.x += (targetX - p.x) * 0.01;
+          p.y += (targetY - p.y) * 0.01;
         }
 
-        const pulse = Math.sin(time * 2 + orb.phase) * 10;
-        const r = orb.radius + pulse;
+        const pulse = Math.sin(time * p.pulseSpeed + p.phase) * p.pulseAmp;
+        const currentAlpha = Math.max(0.05, p.alpha + pulse);
+        const currentRadius = p.radius + Math.sin(time * 1.5 + p.phase) * 0.5;
 
-        const grad = ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, r);
-        grad.addColorStop(0, orb.color);
-        grad.addColorStop(1, "rgba(0,0,0,0)");
+        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, currentRadius * 3);
+        grad.addColorStop(0, `rgba(${p.color}, ${currentAlpha})`);
+        grad.addColorStop(0.4, `rgba(${p.color}, ${currentAlpha * 0.4})`);
+        grad.addColorStop(1, `rgba(${p.color}, 0)`);
 
         ctx.beginPath();
-        ctx.arc(orb.x, orb.y, r, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, currentRadius * 3, 0, Math.PI * 2);
         ctx.fillStyle = grad;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, currentRadius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${p.color}, ${Math.min(1, currentAlpha * 1.5)})`;
         ctx.fill();
       });
 
