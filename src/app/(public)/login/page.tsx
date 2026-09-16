@@ -53,9 +53,6 @@ export default function LoginPage() {
       <div className="max-w-md mx-auto card relative" style={{ zIndex: 10 }}>
         {/* Logo + Glow */}
         <div className="relative mx-auto mb-6 h-32 w-32 flex items-center justify-center">
-          <div className="anim-pulse-glow absolute inset-0 rounded-full bg-primary/30" />
-          <div className="anim-float-slow absolute -inset-3 rounded-full bg-accent/15" />
-          <div className="anim-float absolute -inset-6 rounded-full bg-primary-light/10" />
           <Image
             src="/branding/logo-ukm-transparent.png"
             alt="UKM Olahraga"
