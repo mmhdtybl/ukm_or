@@ -5,6 +5,7 @@ import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import PasswordInput from "@/components/PasswordInput";
+import LoginBackground from "@/components/LoginBackground";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -47,8 +48,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="container-page py-20">
-      <div className="max-w-md mx-auto card">
+    <div className="container-page py-20 relative min-h-screen">
+      <LoginBackground />
+      <div className="max-w-md mx-auto card relative" style={{ zIndex: 10 }}>
         {/* Logo + Glow */}
         <div className="relative mx-auto mb-6 h-32 w-32 flex items-center justify-center">
           <div className="anim-pulse-glow absolute inset-0 rounded-full bg-primary/30" />
